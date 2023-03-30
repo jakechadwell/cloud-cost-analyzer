@@ -1,0 +1,21 @@
+{
+  "name": "employee-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "dev": "vue-cli-service dev",
+    "build": "vue-cli-service build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "vue": "^2.7.14",
+    "vue-template-compiler": "^2.7.14",
+    "vue-router": "^2.7.14",
+    "target": "^0.0.2"
+  },
+  "devDependencies": {
+    "@vue/cli-service": "^3.5.0"
+  }
+}
