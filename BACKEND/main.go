@@ -4,16 +4,18 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	_ "go/token"
 	"io/ioutil"
 	"log"
 	"net/http"
-
 	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	// "golang.org/x/crypto/bcrypt"
+	// "github.com/dgrijalva/jwt-go"
 )
 
 type Employee struct{
@@ -61,8 +63,24 @@ func getEnvVars(){
 	}
 }
 
+//JWT Authentication
+// var SECRET_KEY = []byte("gosecretkey")
+
+// func getHash(pwd []byte) string{
+// 	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
+// 	checkErr(err)
+// 	return string(hash)
+// }
+
+// func GenerateJWT()(string, error){
+// 	token := jwt.New(jwt.SigningMethodHS256)
+// 	tokenString, err := token.SignedString(SECRET_KEY)
+// 	checkErr(err)
+// 	return tokenString, nil
+// }
 
 
+//Main Function
 func main(){
 	getEnvVars()
 	setupDB()
