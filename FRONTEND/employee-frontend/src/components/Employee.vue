@@ -110,21 +110,6 @@
           ("Enter atleast 4 characters in Last Name");
         }
         if (this.errors.length === 0) {
-          if (this.emailid == -1) {
-            EmployeeDataService.createEmployee({
-              firstName: this.firstName,
-              lastName: this.lastName,
-              middleName: this.middleName,
-              emailid: this.emailid,
-              sapid: this.sapid,
-              organization: this.organization,
-              role: this.role,
-              reportingto: this.reportingto,
-              phonenumber: this.phonenumber,
-            }).then(() => {
-              this.$router.push("/employees");
-            });
-          } else {
             EmployeeDataService.updateEmployee(this.emailid, {
                 firstName: this.firstName,
                 lastName: this.lastName,
@@ -141,7 +126,6 @@
           }
         }
       },
-    },
     created() {
       this.refreshEmployeeDetails();
     }

@@ -19,21 +19,23 @@ import (
 )
 
 type Employee struct{
+	EmployeeID string `json:"employeeid"`
 	FirstName string `json:"firstName"`
 	LastName string `json:"lastName"`
-	MiddleName string `json:"middleName"`
-	EmailID string `json:"emailid"`
-	SapID string `json:"sapid"`
-	Role string `json:"role"`
-	Organization string `json:"organization"`
-	ReportingTo string `json:"reportingto"`
-	PhoneNumber string `json:"phonenumber"`
+	Dept string `json:"dept"`
+	Cloud string `json:"cloud"`
+	TrainingAttended string `json:"trainingAttended"`
+	TrainingPath string `json:"trainingPath"`
+	Email string `json:"email"`
+	Infographics string `json:"infographics"`
 }
 
 type Training struct{
-	Category string `json:"category"`
-	CourseName string `json:"courseName"`
-	CourseCode string `json:"courseCode"`
+	TrainingID string `json:"trainingid"`
+	CloudID string `json:"cloudid"`
+	TrainingDetail string `json:"trainingDetail"`
+	TrainingPath string `json:"trainingPath"`
+	TrainingDates string `json:"trainingDates"`
 }
 
 //Check Error Function
@@ -91,23 +93,23 @@ func main(){
 
 	router.HandleFunc("/employees", GetEmployees).Methods("GET")
 
-	router.HandleFunc("/employees/{emailid}", GetEmployee).Methods("GET")
+	router.HandleFunc("/employees/{employeeid}", GetEmployee).Methods("GET")
 
 	router.HandleFunc("/employees", CreateEmployee).Methods("POST")
 
-	router.HandleFunc("/employees/{emailid}", UpdateEmployee).Methods("PUT")
+	router.HandleFunc("/employees/{employeeid}", UpdateEmployee).Methods("PUT")
 
-	router.HandleFunc("/employees/{emailid}", DeleteEmployee).Methods("DELETE")
+	router.HandleFunc("/employees/{employeeid}", DeleteEmployee).Methods("DELETE")
 
 	//Training Routes
 	
 	router.HandleFunc("/trainings", GetTrainings).Methods("GET")
 
-	router.HandleFunc("/trainings/{coursecode}", GetTraining).Methods("GET")
+	router.HandleFunc("/trainings/{trainingid}", GetTraining).Methods("GET")
 
-	router.HandleFunc("/trainings/{coursecode}", DeleteTraining).Methods("DELETE")
+	router.HandleFunc("/trainings/{trainingid}", DeleteTraining).Methods("DELETE")
 
-	router.HandleFunc("/trainings/{coursecode}", UpdateTraining).Methods("PUT")
+	router.HandleFunc("/trainings/{trainingid}", UpdateTraining).Methods("PUT")
 
 	router.HandleFunc("/trainings", CreateTraining).Methods("POST")
 
@@ -121,12 +123,12 @@ func main(){
 func GetEmployee(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	result, err := db.Query("SELECT * FROM employees WHERE email_id = $1", params["emailid"])
+	result, err := db.Query("SELECT * FROM employees WHERE employee_id = $1", params["employeeid"])
 	checkErr(err)
 	defer result.Close()
 	var employee Employee
 	for result.Next(){
-		err := result.Scan(&employee.FirstName, &employee.LastName, &employee.MiddleName, &employee.EmailID, &employee.SapID, &employee.Role, &employee.Organization, &employee.ReportingTo, &employee.PhoneNumber)
+		err := result.Scan(&employee.EmployeeID, &employee.FirstName, &employee.LastName, &employee.Dept, &employee.Cloud, &employee.TrainingAttended, &employee.TrainingPath, &employee.Email, &employee.Infographics)
 		checkErr(err)
 	}
 	json.NewEncoder(w).Encode(employee)
@@ -141,7 +143,7 @@ func GetEmployees(w http.ResponseWriter, r *http.Request){
 	defer result.Close()
 	for result.Next() {
 		var employee Employee
-		err := result.Scan(&employee.FirstName, &employee.LastName, &employee.MiddleName, &employee.EmailID, &employee.SapID, &employee.Role, &employee.Organization, &employee.ReportingTo, &employee.PhoneNumber)
+		err := result.Scan(&employee.EmployeeID, &employee.FirstName, &employee.LastName, &employee.Dept, &employee.Cloud, &employee.TrainingAttended, &employee.TrainingPath, &employee.Email, &employee.Infographics)
 		checkErr(err)
 		employees = append(employees, employee)
 	}
@@ -151,22 +153,22 @@ func GetEmployees(w http.ResponseWriter, r *http.Request){
 //Create Employee
 func CreateEmployee(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
-	stmt, err := db.Prepare("INSERT INTO employees(first_name, last_name, middle_name, email_id, sap_id, role, organization, reporting_to, phone_number) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)")
+	stmt, err := db.Prepare("INSERT INTO employees(employee_id, first_name, last_name, dept, cloud, training_attended, training_path, email, infographics) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)")
 	checkErr(err)
 	body, err := ioutil.ReadAll(r.Body)
 	checkErr(err)
 	keyVal := make(map[string]string)
 	json.Unmarshal(body, &keyVal)
+	employee_id := keyVal["employeeid"]
 	first_name := keyVal["firstName"]
 	last_name := keyVal["lastName"]
-	middle_name := keyVal["middleName"]
-	email_id := keyVal["emailid"]
-	sap_id := keyVal["sapid"]
-	role := keyVal["role"]
-	organization := keyVal["organization"]
-	reporting_to := keyVal["reportingto"]
-	phone_number := keyVal["phonenumber"]
-	_, err = stmt.Exec(first_name, last_name, middle_name, email_id, sap_id, role, organization, reporting_to, phone_number)
+	dept := keyVal["dept"]
+	cloud := keyVal["cloud"]
+	training_attended := keyVal["trainingAttended"]
+	training_path := keyVal["trainingPath"]
+	email := keyVal["email"]
+	infographics := keyVal["infographics"]
+	_, err = stmt.Exec(employee_id, first_name, last_name, dept, cloud, training_attended, training_path, email, infographics)
 	checkErr(err)
 	fmt.Fprintln(w, "New Employee Was Created")
 }
@@ -175,35 +177,34 @@ func CreateEmployee(w http.ResponseWriter, r *http.Request){
 func DeleteEmployee(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
     params := mux.Vars(r)
-    stmt, err := db.Prepare("DELETE FROM employees WHERE email_id = $1")
+    stmt, err := db.Prepare("DELETE FROM employees WHERE employee_id = $1")
     checkErr(err)
-    _, err = stmt.Exec(params["emailid"])
+    _, err = stmt.Exec(params["employeeid"])
     checkErr(err)
-    fmt.Fprintf(w, "Employee with ID = %s was deleted", params["emailid"])
+    fmt.Fprintf(w, "Employee with ID = %s was deleted", params["employeeid"])
 }
 
 //Update Employee
 func UpdateEmployee(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	stmt, err := db.Prepare("UPDATE employees SET first_name = $1, last_name = $2, middle_name = $3, email_id = $4, sap_id = $5, role = $6, organization = $7, reporting_to = $8, phone_number = $9 WHERE email_id = $10")
+	stmt, err := db.Prepare("UPDATE employees SET first_name = $1, last_name = $2, dept = $3, cloud = $4, training_attended = $5, training_path = $6, email = $7, infographics = $8 WHERE employee_id = $9")
 	checkErr(err)
 	body, err := ioutil.ReadAll(r.Body)
 	checkErr(err)
 	keyVal := make(map[string]string)
     json.Unmarshal(body, &keyVal)
-    first_name := keyVal["firstName"]
-    last_name := keyVal["lastName"]
-    middle_name := keyVal["middleName"]
-	email_id := keyVal["emailid"]
-	sap_id := keyVal["sapid"]
-	role := keyVal["role"]
-	organization := keyVal["organization"]
-	reporting_to := keyVal["reportingto"]
-	phone_number := keyVal["phonenumber"]
-    _, err = stmt.Exec(first_name, last_name, middle_name, email_id, sap_id, role, organization, reporting_to, phone_number, params["emailid"])
+	first_name := keyVal["firstName"]
+	last_name := keyVal["lastName"]
+	dept := keyVal["dept"]
+	cloud := keyVal["cloud"]
+	training_attended := keyVal["trainingAttended"]
+	training_path := keyVal["trainingPath"]
+	email := keyVal["email"]
+	infographics := keyVal["infographics"]
+    _, err = stmt.Exec(first_name, last_name, dept, cloud, training_attended, training_path, email, infographics, params["employeeid"])
     checkErr(err)
-    fmt.Fprintf(w, "User with ID = %s was updated", params["emailid"])
+    fmt.Fprintf(w, "User with ID = %s was updated", params["employeeid"])
 }
 
 //TRAINING METHODS//
@@ -217,7 +218,7 @@ func GetTrainings(w http.ResponseWriter, r *http.Request){
 	defer result.Close()
 	for result.Next() {
 		var training Training
-		err = result.Scan(&training.Category, &training.CourseName, &training.CourseCode)
+		err = result.Scan(&training.TrainingID, &training.CloudID, &training.TrainingDetail, &training.TrainingPath, &training.TrainingDates)
 		checkErr(err)
 		trainings = append(trainings, training)
 	}
@@ -228,12 +229,12 @@ func GetTrainings(w http.ResponseWriter, r *http.Request){
 func GetTraining(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	result, err := db.Query("SELECT * FROM trainings WHERE course_code = $1", params["coursecode"])
+	result, err := db.Query("SELECT * FROM trainings WHERE training_id = $1", params["trainingid"])
 	checkErr(err)
 	defer result.Close()
 	var training Training
 	for result.Next(){
-		err := result.Scan(&training.Category, &training.CourseName, &training.CourseCode)
+		err := result.Scan(&training.TrainingID, &training.CloudID, &training.TrainingDetail, &training.TrainingPath, &training.TrainingDates)
 		checkErr(err)
 	}
 	json.NewEncoder(w).Encode(training)
@@ -242,16 +243,18 @@ func GetTraining(w http.ResponseWriter, r *http.Request){
 //Create Training
 func CreateTraining(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
-	stmt, err := db.Prepare("INSERT INTO trainings(category, course_name, course_code) VALUES ($1, $2 , $3)")
+	stmt, err := db.Prepare("INSERT INTO trainings(training_id, cloud_id, training_detail, training_path, training_dates) VALUES ($1, $2 , $3, $4, $5)")
 	checkErr(err)
 	body, err := ioutil.ReadAll(r.Body)
 	checkErr(err)
 	keyVal := make(map[string]string)
 	json.Unmarshal(body, &keyVal)
-	category := keyVal["category"]
-	course_name := keyVal["courseName"]
-	course_code := keyVal["courseCode"]
-	_, err = stmt.Exec(category, course_name, course_code)
+	training_id := keyVal["trainingid"]
+	cloud_id := keyVal["cloudid"]
+	training_detail := keyVal["trainingDetail"]
+	training_path := keyVal["trainingPath"]
+	training_dates := keyVal["trainingDates"]
+	_, err = stmt.Exec(training_id, cloud_id, training_detail, training_path, training_dates)
 	checkErr(err)
 	fmt.Fprintln(w, "New Training Has Been Created")
 }	
@@ -260,28 +263,30 @@ func CreateTraining(w http.ResponseWriter, r *http.Request){
 func UpdateTraining(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	stmt, err := db.Prepare("UPDATE trainings SET category = $1, course_name = $2 WHERE course_code = $3")
+	stmt, err := db.Prepare("UPDATE trainings SET cloud_id = $1, training_detail = $2, training_path = $3, training_dates = $4 WHERE training_id = $5")
 	checkErr(err)
 	body, err := ioutil.ReadAll(r.Body)
 	checkErr(err)
 	keyVal := make(map[string]string)
 	json.Unmarshal(body, &keyVal)
-	category := keyVal["category"]
-	course_name := keyVal["courseName"]
-	_, err = stmt.Exec(category, course_name, params["coursecode"])
+	cloud_id := keyVal["cloudid"]
+	training_detail := keyVal["trainingDetail"]
+	training_path := keyVal["trainingPath"]
+	training_dates := keyVal["trainingDates"]
+	_, err = stmt.Exec(cloud_id, training_detail, training_path, training_dates, params["trainingid"])
 	checkErr(err)
-	fmt.Fprintf(w, "Training with Course Code = %s was Updated", params["coursecode"])
+	fmt.Fprintf(w, "Training with ID = %s was Updated", params["trainingid"])
 }
 
 //Delete Training
 func DeleteTraining(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	stmt, err := db.Prepare("DELETE FROM trainings WHERE course_code = $1")
+	stmt, err := db.Prepare("DELETE FROM trainings WHERE training_id = $1")
 	checkErr(err)
-	_, err = stmt.Exec(params["coursecode"])
+	_, err = stmt.Exec(params["trainingid"])
 	checkErr(err)
-	fmt.Fprintf(w, "Training with Course Code = %s Has Been Deleted", params["coursecode"])
+	fmt.Fprintf(w, "Training with ID = %s Has Been Deleted", params["trainingid"])
 }
 
 // CORSRouterDecorator applies CORS headers to a mux.Router
