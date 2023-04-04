@@ -1,35 +1,35 @@
-# employee_restapi
+# Golang/Vue.js/PostgreSQL Training App
 
 ### Endpoints
 
 ```sh
-Method GET
+Method: GET
 /employees
 
-Method GET
-/employees/id
+Method: GET
+/employees/employee_id
 
-Method POST
+Method: POST
 /employees
 
-Method PUT
-/employees/id
+Method: PUT
+/employees/employee_id
 
-Method DELETE
-/employees/id
+Method: DELETE
+/employees/employee_id
 
-Method GET
+Method: GET
 /trainings
 
-Method GET
-/trainings/id
+Method: GET
+/trainings/training_id
 
-Method POST
+Method: POST
 /trainings
 
-Method PUT
-/trainings/id
+Method: PUT
+/trainings/training_id
 
-Method DELETE
-/trainings/id
+Method: DELETE
+/trainings/training_id
 ```
