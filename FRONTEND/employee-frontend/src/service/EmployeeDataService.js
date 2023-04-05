@@ -8,19 +8,19 @@ class EmployeeDataService {
         return axios.get(`${USER_API_URL}/employees`);
     }
 
-    retrieveEmployee(emailid) {
+    retrieveEmployee(employeeid) {
 
-        return axios.get(`${USER_API_URL}/employees/${emailid}`);
+        return axios.get(`${USER_API_URL}/employees/${employeeid}`);
     }
 
-    deleteEmployee(emailid) {
+    deleteEmployee(employeeid) {
 
-        return axios.delete(`${USER_API_URL}/employees/${emailid}`);
+        return axios.delete(`${USER_API_URL}/employees/${employeeid}`);
     }
 
-    updateEmployee(emailid, employee) {
+    updateEmployee(employeeid, employee) {
 
-        return axios.put(`${USER_API_URL}/employees/${emailid}`, employee);
+        return axios.put(`${USER_API_URL}/employees/${employeeid}`, employee);
     }
 
     createEmployee(employee) {

@@ -7,15 +7,15 @@
         <table class="table">
           <thead>
             <tr> 
+              <th>Employee ID</th>
               <th>First Name</th>
               <th>Last Name</th>
-              <th>Middle Name</th>
-              <th>Email ID</th>
-              <th>SAP ID</th>
-              <th>Organization</th>
-              <th>Role</th>
-              <th>Reporting To</th>
-              <th>Phone Number</th>
+              <th>Dept</th>
+              <th>Cloud</th>
+              <th>Training Attended</th>
+              <th>Training Path</th>
+              <th>Email</th>
+              <th>Infographic</th>
               <th>Update</th>
               <th>Delete</th>
             </tr>
@@ -23,24 +23,24 @@
           <tbody>
             <tr v-for="employee in employees" v-bind:key="employee.emailid">
             
+              <td>{{ employee.employeeid }}</td>
               <td>{{ employee.firstName }}</td>
               <td>{{ employee.lastName }}</td>
-              <td>{{ employee.middleName }}</td>
-              <td>{{ employee.emailid }}</td>
-              <td>{{ employee.sapid }}</td>
-              <td>{{ employee.organization }}</td>
-              <td>{{ employee.role }}</td>
-              <td>{{ employee.reportingto }}</td>
-              <td>{{ employee.phonenumber }}</td>
+              <td>{{ employee.dept }}</td>
+              <td>{{ employee.cloud }}</td>
+              <td>{{ employee.trainingAttended }}</td>
+              <td>{{ employee.trainingPath }}</td>
+              <td>{{ employee.email }}</td>
+              <td>{{ employee.infographic }}</td>
               <td>
                 <button class="btn btn-warning" 
-                v-on:click="updateEmployee(employee.emailid)">
+                v-on:click="updateEmployee(employee.employeeid)">
                   Update
                 </button>
               </td>
               <td>
                 <button class="btn btn-danger" 
-                v-on:click="deleteEmployee(employee.emailid)">
+                v-on:click="deleteEmployee(employee.employeeid)">
                   Delete
                 </button>
               </td>
@@ -75,11 +75,11 @@
       addEmployee() {
         this.$router.push(`/employee/new`);
       },
-      updateEmployee(emailid) {
-        this.$router.push(`/employee/${emailid}`);
+      updateEmployee(employeeid) {
+        this.$router.push(`/employee/${employeeid}`);
       },
-      deleteEmployee(emailid) {
-        EmployeeDataService.deleteEmployee(emailid).then(() => {
+      deleteEmployee(employeeid) {
+        EmployeeDataService.deleteEmployee(employeeid).then(() => {
           this.refreshEmployees();
         });
       },

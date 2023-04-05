@@ -8,19 +8,19 @@ class TrainingDataService {
         return axios.get(`${USER_API_URL}/trainings`);
     }
 
-    retrieveTraining(courseCode) {
+    retrieveTraining(trainingid) {
 
-        return axios.get(`${USER_API_URL}/trainings/${courseCode}`);
+        return axios.get(`${USER_API_URL}/trainings/${trainingid}`);
     }
 
-    deleteTraining(courseCode) {
+    deleteTraining(trainingid) {
 
-        return axios.delete(`${USER_API_URL}/trainings/${courseCode}`);
+        return axios.delete(`${USER_API_URL}/trainings/${trainingid}`);
     }
 
-    updateTraining(courseCode, training) {
+    updateTraining(trainingid, training) {
 
-        return axios.put(`${USER_API_URL}/trainings/${courseCode}`, training);
+        return axios.put(`${USER_API_URL}/trainings/${trainingid}`, training);
     }
 
     createTraining(training) {

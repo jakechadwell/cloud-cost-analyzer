@@ -17,7 +17,7 @@ const router = new Router({
             component: () => import("./components/NewEmployee"),
         },
         {
-            path: "/employee/:emailid",
+            path: "/employee/:employeeid",
             name: "Employee",
             component: () => import("./components/Employee"),
         },
@@ -32,7 +32,7 @@ const router = new Router({
             component: () => import("./components/NewTraining"),
         },
         {
-            path: "/training/:courseCode",
+            path: "/training/:trainingid",
             name: "Training",
             component: () => import("./components/Training"),
         },      

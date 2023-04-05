@@ -23,34 +23,34 @@
              v-model="lastName" />
           </fieldset>
           <fieldset class="form-group">
-            <label>Middle Name</label>
+            <label>Dept</label>
             <input type="text" class="form-control"
-             v-model="middleName" />
+             v-model="dept" />
           </fieldset>
           <fieldset class="form-group">
-            <label>SAP ID</label>
+            <label>Cloud</label>
             <input type="text" class="form-control"
-             v-model="sapid" />
+             v-model="cloud" />
           </fieldset>
           <fieldset class="form-group">
-            <label>Organization</label>
+            <label>Training Attended</label>
             <input type="text" class="form-control"
-             v-model="organization" />
+             v-model="trainingAttended" />
           </fieldset>
           <fieldset class="form-group">
-            <label>Role</label>
+            <label>Training Path</label>
             <input type="text" class="form-control"
-             v-model="role" />
+             v-model="trainingPath" />
           </fieldset>
           <fieldset class="form-group">
-            <label>Reporting To</label>
+            <label>Email</label>
             <input type="text" class="form-control"
-             v-model="reportingto" />
+             v-model="email" />
           </fieldset>
           <fieldset class="form-group">
-            <label>Phone Number</label>
-            <input type="text" class="form-control" 
-            v-model="phonenumber" />
+            <label>Infographic</label>
+            <input type="text" class="form-control"
+             v-model="infographic" />
           </fieldset>
           <button class="btn btn-success" 
           type="submit">Save</button>
@@ -67,31 +67,31 @@
       return {
         firstName: "",
         lastName: "",
-        middleName: "",
-        sapid: "",
-        organization: "",
-        role: "",
-        reportingto: "",
-        phonenumber: "",
+        dept: "",
+        cloud: "",
+        trainingAttended: "",
+        trainingPath: "",
+        email: "",
+        infographic: "",
         errors: [],
       };
     },
     computed: {
-      emailid() {
-        return this.$route.params.emailid;
+      employeeid() {
+        return this.$route.params.employeeid;
       },
     },
     methods: {
       refreshEmployeeDetails() {
-        EmployeeDataService.retrieveEmployee(this.emailid).then((res) => {
+        EmployeeDataService.retrieveEmployee(this.employeeid).then((res) => {
           this.firstName = res.data.firstName;
           this.lastName = res.data.lastName;
-          this.middleName = res.data.middleName;
-          this.sapid = res.data.sapid;
-          this.organization = res.data.organization;
-          this.role = res.data.role;
-          this.reportingto = res.data.reportingto;
-          this.phonenumber = res.data.phonenumber;
+          this.dept = res.data.dept;
+          this.cloud = res.data.cloud;
+          this.trainingAttended = res.data.trainingAttended;
+          this.trainingPath = res.data.trainingPath;
+          this.email = res.data.email;
+          this.infographic = res.data.infographic;
         });
       },
       validateAndSubmit(e) {
@@ -113,13 +113,12 @@
             EmployeeDataService.updateEmployee(this.emailid, {
                 firstName: this.firstName,
                 lastName: this.lastName,
-                middleName: this.middleName,
-                emailid: this.emailid,
-                sapid: this.sapid,
-                organization: this.organization,
-                role: this.role,
-                reportingto: this.reportingto,
-                phonenumber: this.phonenumber,
+                dept: this.dept,
+                cloud: this.cloud,
+                trainingAttended: this.trainingAttended,
+                trainingPath: this.trainingPath,
+                email: this.email,
+                infographic: this.infographic
             }).then(() => {
               this.$router.push("/employees");
             });

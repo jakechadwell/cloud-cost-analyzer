@@ -7,28 +7,32 @@
         <table class="table">
           <thead>
             <tr> 
-              <th>Category</th>
-              <th>Course Name</th>
-              <th>Course ID</th>
+              <th>Training ID</th>
+              <th>Cloud ID</th>
+              <th>Training Detail</th>
+              <th>Training Path</th>
+              <th>Training Dates</th>
               <th>Update</th>
               <th>Delete</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="training in trainings" v-bind:key="training.courseCode">
+            <tr v-for="training in trainings" v-bind:key="training.trainingid">
             
-              <td>{{ training.category }}</td>
-              <td>{{ training.courseName }}</td>
-              <td>{{ training.courseCode }}</td>
+              <td>{{ training.trainingid }}</td>
+              <td>{{ training.cloudid }}</td>
+              <td>{{ training.trainingDetail }}</td>
+              <td>{{ training.trainingPath }}</td>
+              <td>{{ training.trainingDates }}</td>
               <td>
                 <button class="btn btn-warning" 
-                v-on:click="updateTraining(training.courseCode)">
+                v-on:click="updateTraining(training.trainingid)">
                   Update
                 </button>
               </td>
               <td>
                 <button class="btn btn-danger" 
-                v-on:click="deleteTraining(training.courseCode)">
+                v-on:click="deleteTraining(training.trainingid)">
                   Delete
                 </button>
               </td>
@@ -58,17 +62,16 @@
       refreshTrainings() {
         axios.get("http://localhost:9080/trainings").then((res) => {
           this.trainings = res.data;
-          console.log(this.trainings)
         });
       },
       addTraining() {
         this.$router.push(`/training/new`);
       },
-      updateTraining(courseCode) {
-        this.$router.push(`/training/${courseCode}`);
+      updateTraining(trainingid) {
+        this.$router.push(`/training/${trainingid}`);
       },
-      deleteTraining(courseCode) {
-        TrainingDataService.deleteTraining(courseCode).then(() => {
+      deleteTraining(trainingid) {
+        TrainingDataService.deleteTraining(trainingid).then(() => {
           this.refreshTrainings();
         });
       },

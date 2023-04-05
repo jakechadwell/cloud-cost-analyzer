@@ -13,6 +13,11 @@
             </div>
           </div>
           <fieldset class="form-group">
+            <label>Employee ID</label>
+            <input type="text" class="form-control"
+             v-model="employeeid" />
+          </fieldset>
+          <fieldset class="form-group">
             <label>First Name</label>
             <input type="text" class="form-control"
              v-model ="firstName" />
@@ -23,39 +28,34 @@
              v-model="lastName" />
           </fieldset>
           <fieldset class="form-group">
-            <label>Middle Name</label>
+            <label>Dept</label>
             <input type="text" class="form-control"
-             v-model="middleName" />
+             v-model="dept" />
           </fieldset>
           <fieldset class="form-group">
-            <label>Email ID</label>
+            <label>Cloud</label>
             <input type="text" class="form-control"
-             v-model="emailid" />
+             v-model="cloud" />
           </fieldset>
           <fieldset class="form-group">
-            <label>SAP ID</label>
+            <label>Training Attended</label>
             <input type="text" class="form-control"
-             v-model="sapid" />
+             v-model="trainingAttended" />
           </fieldset>
           <fieldset class="form-group">
-            <label>Organization</label>
+            <label>Training Path</label>
             <input type="text" class="form-control"
-             v-model="organization" />
+             v-model="trainingPath" />
           </fieldset>
           <fieldset class="form-group">
-            <label>Role</label>
+            <label>Email</label>
             <input type="text" class="form-control"
-             v-model="role" />
+             v-model="email" />
           </fieldset>
           <fieldset class="form-group">
-            <label>Reporting To</label>
-            <input type="text" class="form-control"
-             v-model="reportingto" />
-          </fieldset>
-          <fieldset class="form-group">
-            <label>Phone Number</label>
+            <label>Infographic</label>
             <input type="text" class="form-control" 
-            v-model="phonenumber" />
+            v-model="infographic" />
           </fieldset>
           <button class="btn btn-success" 
           type="submit">Save</button>
@@ -70,30 +70,30 @@
     name: "NewEmployee",
     data() {
       return {
+        employeeid: "",
         firstName: "",
         lastName: "",
-        middleName: "",
-        emailid: "",
-        sapid: "",
-        organization: "",
-        role: "",
-        reportingto: "",
-        phonenumber: "",
+        dept: "",
+        cloud: "",
+        trainingAttended: "",
+        trainingPath: "",
+        email: "",
+        infographic: "",
         errors: [],
       };
     },
     methods: {
       refreshEmployeeDetails() {
-        EmployeeDataService.retrieveEmployee(this.emailid).then((res) => {
+        EmployeeDataService.retrieveEmployee(this.employeeid).then((res) => {
+          this.employeeid = res.data.employeeid;
           this.firstName = res.data.firstName;
           this.lastName = res.data.lastName;
-          this.middleName = res.data.middleName;
-          this.emailid = res.data.emailid;
-          this.sapid = res.data.sapid;
-          this.organization = res.data.organization;
-          this.role = res.data.role;
-          this.reportingto = res.data.reportingto;
-          this.phonenumber = res.data.phonenumber;
+          this.dept = res.data.dept;
+          this.cloud = res.data.cloud;
+          this.trainingAttended = res.data.trainingAttended;
+          this.trainingPath = res.data.trainingPath;
+          this.email = res.data.email;
+          this.infographic = res.data.infographic;
         });
       },
       validateAndSubmit(e) {
@@ -113,15 +113,15 @@
         }
         if (this.errors.length === 0) {
             EmployeeDataService.createEmployee({
-              firstName: this.firstName,
-              lastName: this.lastName,
-              middleName: this.middleName,
-              emailid: this.emailid,
-              sapid: this.sapid,
-              organization: this.organization,
-              role: this.role,
-              reportingto: this.reportingto,
-              phonenumber: this.phonenumber,
+                employeeid: this.employeeid,
+                firstName: this.firstName,
+                lastName: this.lastName,
+                dept: this.dept,
+                cloud: this.cloud,
+                trainingAttended: this.trainingAttended,
+                trainingPath: this.trainingPath,
+                email: this.email,
+                infographic: this.infographic
             }).then(() => {
               this.$router.push("/employees");
             });
