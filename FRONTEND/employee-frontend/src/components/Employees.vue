@@ -15,7 +15,7 @@
               <th>Training Attended</th>
               <th>Training Path</th>
               <th>Email</th>
-              <th>Infographic</th>
+              <th>Infographics</th>
               <th>Update</th>
               <th>Delete</th>
             </tr>
@@ -31,7 +31,7 @@
               <td>{{ employee.trainingAttended }}</td>
               <td>{{ employee.trainingPath }}</td>
               <td>{{ employee.email }}</td>
-              <td>{{ employee.infographic }}</td>
+              <td>{{ employee.infographics }}</td>
               <td>
                 <button class="btn btn-warning" 
                 v-on:click="updateEmployee(employee.employeeid)">

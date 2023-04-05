@@ -48,9 +48,9 @@
              v-model="email" />
           </fieldset>
           <fieldset class="form-group">
-            <label>Infographic</label>
+            <label>Infographics</label>
             <input type="text" class="form-control"
-             v-model="infographic" />
+             v-model="infographics" />
           </fieldset>
           <button class="btn btn-success" 
           type="submit">Save</button>
@@ -72,7 +72,7 @@
         trainingAttended: "",
         trainingPath: "",
         email: "",
-        infographic: "",
+        infographics: "",
         errors: [],
       };
     },
@@ -91,7 +91,7 @@
           this.trainingAttended = res.data.trainingAttended;
           this.trainingPath = res.data.trainingPath;
           this.email = res.data.email;
-          this.infographic = res.data.infographic;
+          this.infographics = res.data.infographics;
         });
       },
       validateAndSubmit(e) {
@@ -110,7 +110,8 @@
           ("Enter atleast 4 characters in Last Name");
         }
         if (this.errors.length === 0) {
-            EmployeeDataService.updateEmployee(this.emailid, {
+            EmployeeDataService.updateEmployee(this.employeeid, {
+                employeeid: this.employeeid,
                 firstName: this.firstName,
                 lastName: this.lastName,
                 dept: this.dept,
@@ -118,7 +119,7 @@
                 trainingAttended: this.trainingAttended,
                 trainingPath: this.trainingPath,
                 email: this.email,
-                infographic: this.infographic
+                infographics: this.infographics
             }).then(() => {
               this.$router.push("/employees");
             });
