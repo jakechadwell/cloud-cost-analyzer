@@ -3,10 +3,14 @@
     <div class="navbar-header text-center">
       <a class="navbar-brand" href="/employees">
         View Employees
-        </a>
+      </a>
       <a class="navbar-brand" href="/trainings">
         View Trainings
-      </a><br/><br/>
+      </a>
+      <a class="navbar-brand" href="/attributes">
+        View Attributes
+      </a>
+      <br/><br/>
     </div>
     <router-view/>
   </div>
