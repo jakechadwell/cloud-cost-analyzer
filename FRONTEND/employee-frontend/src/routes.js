@@ -51,6 +51,10 @@ const router = new Router({
             name: "Attribute",
             component: () => import("./components/Attribute"),
         },
+        {
+            path: "/",
+            component: () => import("./components/Index")
+        }
     ]
 });
 
