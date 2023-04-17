@@ -8,7 +8,6 @@
       <b-navbar-nav class="ml-auto">
         <b-nav-item href="/employees" class="p-2">Employees</b-nav-item>
         <b-nav-item href="/trainings" class="p-2">Trainings</b-nav-item>
-        <b-nav-item href="/attributes" class="p-2">Attributes</b-nav-item>
       </b-navbar-nav>
     <!-- </b-collapse> -->
   </b-navbar>
