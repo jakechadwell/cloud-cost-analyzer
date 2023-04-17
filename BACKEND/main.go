@@ -52,7 +52,7 @@ type Cloud struct {
 	CloudTrainingPath      string `json:"cloudtrainingpath"`      //not sure what cloud training path is, set as string for now
 	CloudTrainingAvailable string `json:"cloudtrainingavailable"` //Set as string so we can list out multiple trainings
 	CloudPointOfContact    string `json:"cloudpointofcontact"`    //Guessing this is actually the person you reach out to about training
-	ExternalTrainingPoc    string `json:externalcontactpoc"`      //Likely the external contact for the training provided, could be saved as a name and/or phone number
+	ExternalTrainingPoc    string `json:"externalcontactpoc"`      //Likely the external contact for the training provided, could be saved as a name and/or phone number
 }
 
 //Check Error Function
