@@ -130,18 +130,6 @@ func main(){
 
 	router.HandleFunc("/trainings", CreateTraining).Methods("POST")
 
-	//Attribute Routes
-
-	router.HandleFunc("/attributes", GetAttributes).Methods("GET")
-
-	router.HandleFunc("/attributes/{attributeid}", GetAttribute).Methods("GET")
-
-	router.HandleFunc("/attributes", CreateAttribute).Methods("POST")
-
-	router.HandleFunc("/attributes/{attributeid}", UpdateAttribute).Methods("PUT")
-
-	router.HandleFunc("/attributes/{attributeid}", DeleteAttribute).Methods("DELETE")
-
 	//Cloud Routes
 
 	router.HandleFunc("/cloud", GetCloudIDs).Methods("GET")
@@ -328,91 +316,6 @@ func DeleteTraining(w http.ResponseWriter, r *http.Request){
 	_, err = stmt.Exec(params["trainingid"])
 	checkErr(err)
 	fmt.Fprintf(w, "Training with ID = %s Has Been Deleted", params["trainingid"])
-}
-
-
-//Attributes Methods
-
-//Get All Attributes
-func GetAttributes(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Content-Type", "application/json")
-	var attributes []Attribute
-	result, err := db.Query("SELECT * FROM attributes")
-	checkErr(err)
-	defer result.Close()
-	for result.Next() {
-		var attribute Attribute
-		err = result.Scan(&attribute.AttributeID, &attribute.AttributeName, &attribute.Stage, &attribute.AttributeType, &attribute.Count, &attribute.Course)
-		checkErr(err)
-		attributes = append(attributes, attribute)
-	}
-	json.NewEncoder(w).Encode(attributes)
-}
-
-//Get Single Attribute
-func GetAttribute(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	result, err := db.Query("SELECT * FROM attributes WHERE attribute_id = $1", params["attributeid"])
-	checkErr(err)
-	defer result.Close()
-	var attribute Attribute
-	for result.Next(){
-		err := result.Scan(&attribute.AttributeID, &attribute.AttributeName, &attribute.Stage, &attribute.AttributeType, &attribute.Count, &attribute.Course)
-		checkErr(err)
-	}
-	json.NewEncoder(w).Encode(attribute)
-}
-
-//Create Attribute
-func CreateAttribute(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Content-Type", "application/json")
-	stmt, err := db.Prepare("INSERT INTO attributes(attribute_id, attribute_name, stage, attribute_type, count, course) VALUES ($1, $2 , $3, $4, $5, $6)")
-	checkErr(err)
-	body, err := ioutil.ReadAll(r.Body)
-	checkErr(err)
-	keyVal := make(map[string]string)
-	json.Unmarshal(body, &keyVal)
-	attribute_id := keyVal["attributeid"]
-	attribute_name := keyVal["attributeName"]
-	stage := keyVal["stage"]
-	attribute_type := keyVal["attributeType"]
-	count := keyVal["count"]
-	course := keyVal["course"]
-	_, err = stmt.Exec(attribute_id, attribute_name, stage, attribute_type, count, course)
-	checkErr(err)
-	fmt.Fprintln(w, "New Attribute Has Been Created")
-}	
-
-//Update Attribute
-func UpdateAttribute(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	stmt, err := db.Prepare("UPDATE attributes SET attribute_name = $1, stage = $2, attribute_type = $3, count = $4, course = $5 WHERE attribute_id = $6")
-	checkErr(err)
-	body, err := ioutil.ReadAll(r.Body)
-	checkErr(err)
-	keyVal := make(map[string]string)
-	json.Unmarshal(body, &keyVal)
-	attribute_name := keyVal["attributeName"]
-	stage := keyVal["stage"]
-	attribute_type := keyVal["attributeType"]
-	count := keyVal["count"]
-	course := keyVal["course"]
-	_, err = stmt.Exec(attribute_name, stage, attribute_type, count, course, params["attributeid"])
-	checkErr(err)
-	fmt.Fprintf(w, "Attribute with ID = %s was Updated", params["attributeid"])
-}
-
-//Delete Attribute
-func DeleteAttribute(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	stmt, err := db.Prepare("DELETE FROM attributes WHERE attribute_id = $1")
-	checkErr(err)
-	_, err = stmt.Exec(params["attributeid"])
-	checkErr(err)
-	fmt.Fprintf(w, "Attribute with ID = %s Has Been Deleted", params["attributeid"])
 }
 
 //CLOUD METHODS//
