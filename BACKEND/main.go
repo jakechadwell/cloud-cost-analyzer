@@ -47,6 +47,14 @@ type Attribute struct{
 	Course string `json:"course"`
 }
 
+type Cloud struct {
+	CloudID                string `json:"cloudid"`                //Could reasonably be an integer instead of string
+	CloudTrainingPath      string `json:"cloudtrainingpath"`      //not sure what cloud training path is, set as string for now
+	CloudTrainingAvailable string `json:"cloudtrainingavailable"` //Set as string so we can list out multiple trainings
+	CloudPointOfContact    string `json:"cloudpointofcontact"`    //Guessing this is actually the person you reach out to about training
+	ExternalTrainingPoc    string `json:externalcontactpoc"`      //Likely the external contact for the training provided, could be saved as a name and/or phone number
+}
+
 //Check Error Function
 func checkErr(err error){
 	if err != nil{
@@ -122,7 +130,18 @@ func main(){
 
 	router.HandleFunc("/trainings", CreateTraining).Methods("POST")
 
-	
+	//Cloud Routes
+
+	router.HandleFunc("/cloud", GetCloudIDs).Methods("GET")
+
+	router.HandleFunc("/cloud/{cloudid}", GetCloudID).Methods("GET")
+
+	router.HandleFunc("/cloud", CreateCloudID).Methods("POST")
+
+	router.HandleFunc("/cloud/{cloudid}", UpdateCloudID).Methods("PUT")
+
+	router.HandleFunc("/cloud/{cloudid}", DeleteCloudID).Methods("DELETE")
+
 	fmt.Println("Listening at port 9080")
 	log.Fatal(http.ListenAndServe(":9080", &CORSRouterDecorator{router}))
 }
@@ -299,6 +318,87 @@ func DeleteTraining(w http.ResponseWriter, r *http.Request){
 	fmt.Fprintf(w, "Training with ID = %s Has Been Deleted", params["trainingid"])
 }
 
+//CLOUD METHODS//
+
+// Get All CloudIDs
+func GetCloudIDs(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var clouds []Cloud
+	result, err := db.Query("SELECT * FROM clouds")
+	checkErr(err)
+	defer result.Close()
+	for result.Next() {
+		var cloud Cloud
+		err = result.Scan(&cloud.CloudID, &cloud.CloudTrainingPath, &cloud.CloudTrainingAvailable, &cloud.CloudPointOfContact, &cloud.ExternalTrainingPoc)
+		checkErr(err)
+		clouds = append(clouds, cloud)
+	}
+	json.NewEncoder(w).Encode(clouds)
+}
+
+// Get Single CloudID
+func GetCloudID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	result, err := db.Query("SELECT * FROM clouds WHERE cloud_id = $1", params["cloudid"]) //not sure how you labeled these values in the db, took a guess
+	checkErr(err)
+	defer result.Close()
+	var cloud Cloud
+	for result.Next() {
+		err := result.Scan(&cloud.CloudID, &cloud.CloudTrainingPath, &cloud.CloudTrainingAvailable, &cloud.CloudPointOfContact, &cloud.ExternalTrainingPoc)
+		checkErr(err)
+	}
+	json.NewEncoder(w).Encode(cloud)
+}
+
+// Create CloudID
+func CreateCloudID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	stmt, err := db.Prepare("INSERT INTO clouds(cloud_id, cloudtraining_path, cloudtraining_available, cloud_point_of_contact, external_training_poc) VALUES ($1, $2 , $3, $4, $5, $6)")
+	checkErr(err)
+	body, err := ioutil.ReadAll(r.Body)
+	checkErr(err)
+	keyVal := make(map[string]string)
+	json.Unmarshal(body, &keyVal)
+	cloud_id := keyVal["cloudid"]
+	cloudtraining_path := keyVal["cloudtrainingpath"]
+	cloudtraining_available := keyVal["cloudtrainingavailable"]
+	cloud_point_of_contact := keyVal["cloudpointofcontact"]
+	external_training_poc := keyVal["externaltrainingpoc"]
+	_, err = stmt.Exec(cloud_id, cloudtraining_path, cloudtraining_available, cloud_point_of_contact, external_training_poc)
+	checkErr(err)
+	fmt.Fprintln(w, "New CloudID Has Been Created")
+}
+
+// Update CloudID
+func UpdateCloudID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	stmt, err := db.Prepare("UPDATE clouds SET cloudtraining_path = $1, cloudtraining_available = $2, cloud_point_of_contact = $3, external_training_poc = $4, WHERE cloud_id = $6")
+	checkErr(err)
+	body, err := ioutil.ReadAll(r.Body)
+	checkErr(err)
+	keyVal := make(map[string]string)
+	json.Unmarshal(body, &keyVal)
+	cloudtraining_path := keyVal["cloudtrainingpath"]
+	cloudtraining_available := keyVal["cloudtrainingavailable"]
+	cloud_point_of_contact := keyVal["cloudpointofcontact"]
+	external_training_poc := keyVal["externaltrainingpoc"]
+	_, err = stmt.Exec(cloudtraining_path, cloudtraining_available, cloud_point_of_contact, external_training_poc, params["cloudid"])
+	checkErr(err)
+	fmt.Fprintf(w, "CloudID with ID = %s was Updated", params["cloudid"])
+}
+
+// Delete CloudID
+func DeleteCloudID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	stmt, err := db.Prepare("DELETE FROM clouds WHERE cloud_id = $1")
+	checkErr(err)
+	_, err = stmt.Exec(params["cloudid"])
+	checkErr(err)
+	fmt.Fprintf(w, "CloudID with ID = %s Has Been Deleted", params["cloudid"])
+}
 
 // CORSRouterDecorator applies CORS headers to a mux.Router
 type CORSRouterDecorator struct {
