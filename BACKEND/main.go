@@ -538,23 +538,18 @@ func SignIn(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	check := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password))
-	fmt.Println(creds.Password, user.Password)
 	if check != nil {
 		err := errors.New("Username or Password is incorrect")
 		json.NewEncoder(w).Encode(err)
 		return
 	}
-	fmt.Println("hey")
 	if creds.Role != user.Role{
 		err:= errors.New("Role is incorrect")
 		json.NewEncoder(w).Encode(err)
 		return
 	}
-	fmt.Println("hey")
 	validToken, err := GenerateJWT(user.Email, user.Role)
-	fmt.Println("there")
 	checkErr(err)
-	fmt.Println("buddy")
 	var token Token
 	token.Email = user.Email
 	token.Role = user.Role
