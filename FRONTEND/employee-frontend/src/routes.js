@@ -39,6 +39,14 @@ const router = new Router({
         {
             path: "/",
             component: () => import("./components/Index")
+        },
+        {
+            path: "/signin",
+            component: () => import("./components/Signin")
+        },
+        {
+            path: "/signup",
+            component: () => import("./components/Signup")
         }
     ]
 });

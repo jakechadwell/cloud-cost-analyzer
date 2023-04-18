@@ -6,8 +6,8 @@
 
     <!-- <b-collapse id="navbar-toggle-collapse" is-nav> -->
       <b-navbar-nav class="ml-auto">
-        <b-nav-item href="/employees" class="p-2">Employees</b-nav-item>
-        <b-nav-item href="/trainings" class="p-2">Trainings</b-nav-item>
+        <b-nav-item href="/signin" class="p-2">Login</b-nav-item>
+        <b-nav-item href="/signup" class="p-2">Register</b-nav-item>
       </b-navbar-nav>
     <!-- </b-collapse> -->
   </b-navbar>
@@ -16,12 +16,16 @@
 <style>
 @import url('https://fonts.cdnfonts.com/css/futura-xblk-bt');
 
-  nav-link{
-    font-size: small;
+  body{
+    font-size: 1.25em !important;
   }
 
   .navbar-nav{
     flex-direction: row!important;
+  }
+
+  .navbar-nav .nav-link{
+    padding: 0 .5em 0 .5em !important;
   }
 
   nav {
