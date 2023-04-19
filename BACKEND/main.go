@@ -129,8 +129,6 @@ func main(){
 
 	//Employee Routes
 
-	router.HandleFunc("/employees/{email}", GetEmployeeByEmail).Methods("GET")
-
 	router.HandleFunc("/employees", GetEmployees).Methods("GET")
 
 	router.HandleFunc("/employees/{employeeid}", GetEmployee).Methods("GET")
@@ -188,21 +186,6 @@ func main(){
 }
 
 //EMPLOYEE METHODS//
-
-//Get Single Employee By Email
-func GetEmployeeByEmail(w http.ResponseWriter, r *http.Request){
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	result, err := db.Query("SELECT * FROM employees WHERE email = $1", params["email"])
-	checkErr(err)
-	defer result.Close()
-	var employee Employee
-	for result.Next(){
-		err := result.Scan(&employee.EmployeeID, &employee.FirstName, &employee.LastName, &employee.Dept, &employee.Cloud, &employee.TrainingAttended, &employee.TrainingPath, &employee.Email, &employee.Infographics)
-		checkErr(err)
-	}
-	json.NewEncoder(w).Encode(employee)
-}
 
 //Get Single Employee
 func GetEmployee(w http.ResponseWriter, r *http.Request){
@@ -557,7 +540,6 @@ func SignIn(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	check := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password))
-	fmt.Println(check)
 	if check != nil {
 		err := errors.New("Email or Password is incorrect")
 		json.NewEncoder(w).Encode(err)

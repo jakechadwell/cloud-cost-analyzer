@@ -85,6 +85,7 @@
       refreshEmployeeDetails() {
         EmployeeDataService.retrieveEmployee(this.employeeid).then((res) => {
           this.firstName = res.data.firstName;
+          console.log(res.data)
           this.lastName = res.data.lastName;
           this.dept = res.data.dept;
           this.cloud = res.data.cloud;
