@@ -44,7 +44,7 @@ export default {
             password: this.password,
             role: 'user'
         });
-        this.$router.push("/login");
+        this.$router.push("/signin");
       } catch (e) {
         this.error = true;
         this.password = "";

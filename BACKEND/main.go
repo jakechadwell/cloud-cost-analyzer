@@ -511,7 +511,7 @@ func CreateCredentials(w http.ResponseWriter, r *http.Request) {
 func UpdateCredentials(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	stmt, err := db.Prepare("UPDATE credentials SET email=$1, password=$2, role=$3, WHERE email = $4")
+	stmt, err := db.Prepare("UPDATE credentials SET email=$1, password=$2, role=$3 WHERE email = $4")
 	checkErr(err)
 	body, err := ioutil.ReadAll(r.Body)
 	checkErr(err)
@@ -544,7 +544,7 @@ func SignIn(w http.ResponseWriter, r *http.Request){
 	checkErr(err)
 
 	var user Credentials
-	result, err := db.Query("SELECT credentials.email, password, role FROM credentials, employees WHERE credentials.email=$1 AND credentials.email = employees.email", creds.Email)
+	result, err := db.Query("SELECT email, password, role FROM credentials WHERE email=$1", creds.Email)
 
 	for result.Next(){
 		err:= result.Scan(&user.Email, &user.Password, &user.Role)
@@ -553,14 +553,11 @@ func SignIn(w http.ResponseWriter, r *http.Request){
 	if user.Email == ""{
 		err := errors.New("Email or Password is incorrect")
 		json.NewEncoder(w).Encode(err)
-		return
-	}
-	if user.Email != creds.Email{
-		err := errors.New("Email is incorrect")
-		json.NewEncoder(w).Encode(err)
+		fmt.Println("Email or password is incorrect")
 		return
 	}
 	check := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password))
+	fmt.Println(check)
 	if check != nil {
 		err := errors.New("Email or Password is incorrect")
 		json.NewEncoder(w).Encode(err)
