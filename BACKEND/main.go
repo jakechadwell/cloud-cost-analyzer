@@ -129,6 +129,8 @@ func main(){
 
 	//Employee Routes
 
+	router.HandleFunc("/employees/{email}", GetEmployeeByEmail).Methods("GET")
+
 	router.HandleFunc("/employees", GetEmployees).Methods("GET")
 
 	router.HandleFunc("/employees/{employeeid}", GetEmployee).Methods("GET")
@@ -186,6 +188,21 @@ func main(){
 }
 
 //EMPLOYEE METHODS//
+
+//Get Single Employee By Email
+func GetEmployeeByEmail(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	result, err := db.Query("SELECT * FROM employees WHERE email = $1", params["email"])
+	checkErr(err)
+	defer result.Close()
+	var employee Employee
+	for result.Next(){
+		err := result.Scan(&employee.EmployeeID, &employee.FirstName, &employee.LastName, &employee.Dept, &employee.Cloud, &employee.TrainingAttended, &employee.TrainingPath, &employee.Email, &employee.Infographics)
+		checkErr(err)
+	}
+	json.NewEncoder(w).Encode(employee)
+}
 
 //Get Single Employee
 func GetEmployee(w http.ResponseWriter, r *http.Request){
@@ -279,6 +296,7 @@ func UpdateEmployee(w http.ResponseWriter, r *http.Request){
 
 //Get All Trainings
 func GetTrainings(w http.ResponseWriter, r *http.Request){
+	IsAuthorized(AdminIndex)
 	w.Header().Set("Content-Type", "application/json")
 	var trainings []Training
 	result, err := db.Query("SELECT * FROM trainings")
@@ -533,13 +551,18 @@ func SignIn(w http.ResponseWriter, r *http.Request){
 		checkErr(err)
 	}
 	if user.Email == ""{
-		err := errors.New("Username or Password is incorrect")
+		err := errors.New("Email or Password is incorrect")
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	if user.Email != creds.Email{
+		err := errors.New("Email is incorrect")
 		json.NewEncoder(w).Encode(err)
 		return
 	}
 	check := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password))
 	if check != nil {
-		err := errors.New("Username or Password is incorrect")
+		err := errors.New("Email or Password is incorrect")
 		json.NewEncoder(w).Encode(err)
 		return
 	}
@@ -554,7 +577,6 @@ func SignIn(w http.ResponseWriter, r *http.Request){
 	token.Email = user.Email
 	token.Role = user.Role
 	token.TokenString = validToken
-	fmt.Println(token)
 	json.NewEncoder(w).Encode(token)
 }
 
@@ -654,8 +676,7 @@ func (c *CORSRouterDecorator) ServeHTTP(rw http.ResponseWriter,
         rw.Header().Set("Access-Control-Allow-Methods",
             "POST, GET, OPTIONS, PUT, DELETE")
         rw.Header().Set("Access-Control-Allow-Headers",
-            "Accept, Accept-Language,"+
-                " Content-Type, YourOwnHeader")
+            "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Access-Control-Request-Headers, Access-Control-Request-Method, Connection, Host, Origin, User-Agent, Referer, Cache-Control, X-header")
     }
     // Stop here if its Preflighted OPTIONS request
     if req.Method == "OPTIONS" {

@@ -13,6 +13,10 @@ class EmployeeDataService {
         return axios.get(`${USER_API_URL}/employees/${employeeid}`);
     }
 
+    retrieveEmployeeByEmail(email) {
+        return axios.get(`${USER_API_URL}/employees/${email}`);
+    }
+
     deleteEmployee(employeeid) {
 
         return axios.delete(`${USER_API_URL}/employees/${employeeid}`);
