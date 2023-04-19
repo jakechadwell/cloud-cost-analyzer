@@ -37,23 +37,16 @@ const router = new Router({
             component: () => import("./components/Training"),
         },  
         {
-            path: "/attributes",
-            name: "Attributes",
-            component: () => import("./components/Attributes"),
-        },
-        {
-            path: "/attribute/new",
-            name: "NewAttribute",
-            component: () => import("./components/NewAttribute"),
-        },
-        {
-            path: "/attribute/:attributeid",
-            name: "Attribute",
-            component: () => import("./components/Attribute"),
-        },
-        {
             path: "/",
             component: () => import("./components/Index")
+        },
+        {
+            path: "/signin",
+            component: () => import("./components/Signin")
+        },
+        {
+            path: "/signup",
+            component: () => import("./components/Signup")
         }
     ]
 });

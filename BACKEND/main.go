@@ -3,19 +3,21 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	_ "go/token"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	// "golang.org/x/crypto/bcrypt"
-	// "github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Employee struct{
@@ -55,6 +57,18 @@ type Cloud struct {
 	ExternalTrainingPoc    string `json:"externalcontactpoc"`      //Likely the external contact for the training provided, could be saved as a name and/or phone number
 }
 
+type Credentials struct {
+	Email string `json:"email"`
+	Password string `json:"password"`
+	Role string `json:"role"`
+}
+
+type Token struct {
+	Role string `json:"role"`
+	Email string `json:"email"`
+	TokenString string `json:"tokenString"`
+}
+
 //Check Error Function
 func checkErr(err error){
 	if err != nil{
@@ -82,21 +96,28 @@ func getEnvVars(){
 	}
 }
 
-//JWT Authentication
-// var SECRET_KEY = []byte("gosecretkey")
+// JWT Authentication
 
-// func getHash(pwd []byte) string{
-// 	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
-// 	checkErr(err)
-// 	return string(hash)
-// }
+func getHash(pwd []byte) string{
+	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
+	checkErr(err)
+	return string(hash)
+}
 
-// func GenerateJWT()(string, error){
-// 	token := jwt.New(jwt.SigningMethodHS256)
-// 	tokenString, err := token.SignedString(SECRET_KEY)
-// 	checkErr(err)
-// 	return tokenString, nil
-// }
+func GenerateJWT(email, role string)(string, error){
+	var SECRET_KEY = []byte("gosecretkey")
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+
+	claims["authorized"] = true
+	claims["email"] = email
+	claims["role"] = role
+	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+
+	tokenString, err := token.SignedString(SECRET_KEY)
+	checkErr(err)
+	return tokenString, nil
+}
 
 
 //Main Function
@@ -141,6 +162,24 @@ func main(){
 	router.HandleFunc("/cloud/{cloudid}", UpdateCloudID).Methods("PUT")
 
 	router.HandleFunc("/cloud/{cloudid}", DeleteCloudID).Methods("DELETE")
+
+	//Credential Routes
+
+	router.HandleFunc("/credentials", GetCredentials).Methods("GET")
+
+	router.HandleFunc("/credentials/{email}", GetCredential).Methods("GET")
+
+	router.HandleFunc("/credentials", CreateCredentials).Methods("POST")
+
+	router.HandleFunc("/credentials/{email}", UpdateCredentials).Methods("PUT")
+
+	router.HandleFunc("/credentials/{email}", DeleteCredentials).Methods("DELETE")
+
+	//Auth Routes
+
+	router.HandleFunc("/signin", SignIn).Methods("POST")
+
+	router.HandleFunc("/signup", SignUp).Methods("POST")
 
 	fmt.Println("Listening at port 9080")
 	log.Fatal(http.ListenAndServe(":9080", &CORSRouterDecorator{router}))
@@ -240,6 +279,7 @@ func UpdateEmployee(w http.ResponseWriter, r *http.Request){
 
 //Get All Trainings
 func GetTrainings(w http.ResponseWriter, r *http.Request){
+	IsAuthorized(AdminIndex)
 	w.Header().Set("Content-Type", "application/json")
 	var trainings []Training
 	result, err := db.Query("SELECT * FROM trainings")
@@ -340,7 +380,7 @@ func GetCloudIDs(w http.ResponseWriter, r *http.Request) {
 func GetCloudID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	result, err := db.Query("SELECT * FROM clouds WHERE cloud_id = $1", params["cloudid"]) //not sure how you labeled these values in the db, took a guess
+	result, err := db.Query("SELECT * FROM clouds WHERE cloud_id = $1", params["cloudid"])
 	checkErr(err)
 	defer result.Close()
 	var cloud Cloud
@@ -400,6 +440,209 @@ func DeleteCloudID(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "CloudID with ID = %s Has Been Deleted", params["cloudid"])
 }
 
+// Credentials Methods
+
+// Get All Credentials
+func GetCredentials(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	var credentials []Credentials
+	result, err := db.Query("SELECT * FROM credentials")
+	checkErr(err)
+	defer result.Close()
+	for result.Next() {
+		var credential Credentials
+		err = result.Scan(&credential.Email, &credential.Password, &credential.Role)
+		checkErr(err)
+		credentials = append(credentials, credential)
+	}
+	json.NewEncoder(w).Encode(credentials)
+}
+
+// Get Single Credential
+func GetCredential(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	result, err := db.Query("SELECT * FROM credentials WHERE email=$1", params["email"])
+	checkErr(err)
+	defer result.Close()
+	var credential Credentials
+	for result.Next() {
+		err := result.Scan(&credential.Email, &credential.Password, &credential.Role)
+		checkErr(err)
+	}
+	json.NewEncoder(w).Encode(credential)
+}
+
+// Create Credentials
+func CreateCredentials(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	stmt, err := db.Prepare("INSERT INTO credentials(email, password, role) VALUES ($1, $2, $3)")
+	checkErr(err)
+	body, err := ioutil.ReadAll(r.Body)
+	checkErr(err)
+	keyVal := make(map[string]string)
+	json.Unmarshal(body, &keyVal)
+	email := keyVal["email"]
+	password := keyVal["password"]
+	role := keyVal["role"]
+	_, err = stmt.Exec(email, password, role)
+	checkErr(err)
+	fmt.Fprintln(w, "New Credentials Have Been Created")
+}
+
+// Update Credentials
+func UpdateCredentials(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	stmt, err := db.Prepare("UPDATE credentials SET email=$1, password=$2, role=$3 WHERE email = $4")
+	checkErr(err)
+	body, err := ioutil.ReadAll(r.Body)
+	checkErr(err)
+	keyVal := make(map[string]string)
+	json.Unmarshal(body, &keyVal)
+	email := keyVal["email"]
+	password := keyVal["password"]
+	role := keyVal["role"]
+	_, err = stmt.Exec(email, password, role, params["email"])
+	checkErr(err)
+	fmt.Fprintf(w, "Credentials with email = %s was Updated", params["email"])
+}
+
+// Delete Credentials
+func DeleteCredentials(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	stmt, err := db.Prepare("DELETE FROM credentials WHERE email = $1")
+	checkErr(err)
+	_, err = stmt.Exec(params["email"])
+	checkErr(err)
+	fmt.Fprintf(w, "Credentials with email = %s Has Been Deleted", params["email"])
+}
+
+//SignIn
+func SignIn(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	var creds Credentials
+	err := json.NewDecoder(r.Body).Decode(&creds)
+	checkErr(err)
+
+	var user Credentials
+	result, err := db.Query("SELECT email, password, role FROM credentials WHERE email=$1", creds.Email)
+
+	for result.Next(){
+		err:= result.Scan(&user.Email, &user.Password, &user.Role)
+		checkErr(err)
+	}
+	if user.Email == ""{
+		err := errors.New("Email or Password is incorrect")
+		json.NewEncoder(w).Encode(err)
+		fmt.Println("Email or password is incorrect")
+		return
+	}
+	check := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password))
+	if check != nil {
+		err := errors.New("Email or Password is incorrect")
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	if creds.Role != user.Role{
+		err:= errors.New("Role is incorrect")
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	validToken, err := GenerateJWT(user.Email, user.Role)
+	checkErr(err)
+	var token Token
+	token.Email = user.Email
+	token.Role = user.Role
+	token.TokenString = validToken
+	json.NewEncoder(w).Encode(token)
+}
+
+//SignUp
+func SignUp(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	var user Credentials
+	err := json.NewDecoder(r.Body).Decode(&user)
+	checkErr(err)
+	
+	var dbuser Employee
+	result, err := db.Query("SELECT email FROM employees WHERE email=$1", user.Email)
+	checkErr(err)
+	for result.Next(){
+		err := result.Scan(&dbuser.Email)
+		checkErr(err)
+	}
+	if dbuser.Email != "" {
+		err := errors.New("Email already in use")
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	user.Password = getHash([]byte(user.Password))
+
+	stmt, err := db.Prepare("INSERT INTO credentials(email, password, role) VALUES ($1, $2, $3)")
+	_, err = stmt.Exec(user.Email, user.Password, user.Role)
+	checkErr(err)
+	json.NewEncoder(w).Encode(user)
+}
+
+// MiddleWare Function
+func IsAuthorized(handler http.HandlerFunc) http.HandlerFunc{
+	return func(w http.ResponseWriter, r *http.Request){
+
+		if r.Header["Token"] == nil {
+			err := errors.New("No Token Found")
+			json.NewEncoder(w).Encode(err)
+			return
+		}
+
+		var SECRET_KEY = []byte("gosecretkey")
+
+		token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error){
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("There was an errror in parsing")
+			}	
+			return SECRET_KEY, nil
+		})
+
+		if err != nil {
+			err := errors.New("Your Token Has Expired")
+			json.NewEncoder(w).Encode(err)
+			return
+		}
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid{
+			if claims["role"] == "admin" {
+				r.Header.Set("Role", "admin")
+				handler.ServeHTTP(w, r)
+				return
+			}else if claims["role"] == "user" {
+				r.Header.Set("Role", "user")
+				handler.ServeHTTP(w, r)
+				return
+			}
+		}
+		reserr := errors.New("Not Authorized")
+		json.NewEncoder(w).Encode(reserr)
+	}
+}
+
+func AdminIndex(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Role") != "admin" {
+		w.Write([]byte("Not authorized."))
+		return
+	}
+	w.Write([]byte("Welcome, Admin."))
+}
+
+func UserIndex(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Role") != "user" {
+		w.Write([]byte("Not Authorized."))
+		return
+	}
+	w.Write([]byte("Welcome, User."))
+}
+
 // CORSRouterDecorator applies CORS headers to a mux.Router
 type CORSRouterDecorator struct {
     R *mux.Router
@@ -412,8 +655,7 @@ func (c *CORSRouterDecorator) ServeHTTP(rw http.ResponseWriter,
         rw.Header().Set("Access-Control-Allow-Methods",
             "POST, GET, OPTIONS, PUT, DELETE")
         rw.Header().Set("Access-Control-Allow-Headers",
-            "Accept, Accept-Language,"+
-                " Content-Type, YourOwnHeader")
+            "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Access-Control-Request-Headers, Access-Control-Request-Method, Connection, Host, Origin, User-Agent, Referer, Cache-Control, X-header")
     }
     // Stop here if its Preflighted OPTIONS request
     if req.Method == "OPTIONS" {
