@@ -1,9 +1,9 @@
 <template>
   <div>
     <Navbar/>
-    <div class="container">
+    <!-- <div class="container"> -->
         <router-view/>
-    </div>
+    <!-- </div> -->
   </div>
 </template>
 
@@ -27,6 +27,10 @@ url(https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css);
     text-align: center;
     font-family: "Futura XBlk BT", sans-serif;
     margin-bottom: 1.5em;
+  }
+
+  .container{
+    margin-top: 5em !important;
   }
 
   

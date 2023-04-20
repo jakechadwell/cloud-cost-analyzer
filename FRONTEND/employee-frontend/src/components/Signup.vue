@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container">
     <form @submit.prevent="register">
       <h2>Register</h2>
       <p v-show="error" class="text-sm danger">{{ errorMsg }}</p>
@@ -102,7 +102,7 @@ export default {
     }
 
     button {
-        background: #0b6dff;
+        background: #01b9ff;
 
         border: 0;
 
@@ -117,5 +117,10 @@ export default {
 
     .sub {
         text-align: center;
+    }
+
+    h2{
+        text-align: center;
+        padding-bottom: 1em;
     }
 </style>

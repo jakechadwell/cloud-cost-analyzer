@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="container">
       <form @submit.prevent="login">
         <h2>Sign In</h2>
         <p v-show="error" class="text-sm danger">{{ errorMsg }}</p>
@@ -39,21 +39,21 @@ import AuthDataService from '../service/AuthDataService'
                 AuthDataService.retrieveCredentials(this.email).then((res)=>{
                     try {
                         AuthDataService.signIn({
-                        email: this.email,
-                        password: this.password,
-                        role: res.data.role
-                    }).then((res) => {
-                        window.localStorage.setItem('jwt', res.data.tokenString)
-                        window.localStorage.setItem('userData', JSON.stringify(res.data))
-                        
-                    })
+                            email: this.email,
+                            password: this.password,
+                            role: res.data.role
+                        }).then((res) => {
+                            window.localStorage.setItem('jwt', res.data.tokenString)
+                            window.localStorage.setItem('role', res.data.role)
+                            window.localStorage.setItem('email', res.data.email)
+                        })
                     // window.localStorage.setItem('Authorization', `Bearer ${jwt.tokenString}`)
                     this.$router.push('/')
-                } catch(error) {
-                    this.error = true
-                    this.password = ''
-                    console.log(error)
-                }
+                    } catch(error) {
+                        this.error = true
+                        this.password = ''
+                        console.log(error)
+                    }
 
                 });
                 
@@ -109,7 +109,7 @@ form {
     }
 
     button {
-        background: #0b6dff;
+        background: #01b9ff;
 
         border: 0;
 
@@ -124,5 +124,10 @@ form {
 
     .sub {
         text-align: center;
+    }
+
+    h2{
+        text-align: center;
+        padding-bottom: 1em;
     }
 </style>

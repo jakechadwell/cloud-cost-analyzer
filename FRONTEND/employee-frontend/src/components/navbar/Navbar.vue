@@ -1,5 +1,5 @@
 <template>
-  <b-navbar toggleable type="dark" variant="dark" class="p-4 mb-5">
+  <b-navbar toggleable type="dark" variant="dark" class="p-4">
     <b-navbar-brand href="/">Eclipse Training App </b-navbar-brand>
 
     

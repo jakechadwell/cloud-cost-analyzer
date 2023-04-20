@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="container">
       <h3>New Employee</h3>
       <div class="container">
         <form @submit="validateAndSubmit">
