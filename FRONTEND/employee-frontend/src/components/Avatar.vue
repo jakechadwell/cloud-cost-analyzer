@@ -6,71 +6,77 @@
             <form @submit="validateAndSubimt">
             <div class="card-body">
                 
-                <label for="001">
-                    <input type="radio" id="001" value="1" checked v-model="avatar" />
+                <label for="1">
+                    <input type="radio" id="1" value="1" v-model="avatar" />
                     <img src="../img/001.png" alt="avatar" class="avatar rounded-circle img-fluid" >                    
                 </label>
             </div>
             <div class="card-body">
                 
-                <label for="002">
-                    <input type="radio" id="002" value="2" v-model="avatar" />   
+                <label for="2">
+                    <input type="radio" id="2" value="2" v-model="avatar" />   
                     <img src="../img/002.png" alt="avatar" class="avatar rounded-circle img-fluid" >
                 </label>
             </div>
             <div class="card-body">
-                <label for="003">
-                    <input type="radio" id="003" value="3" v-model="avatar" />
+                <label for="3">
+                    <input type="radio" id="3" value="3" v-model="avatar" />
                     <img src="../img/003.png" alt="avatar" class="avatar rounded-circle img-fluid" >
                 </label>
             </div>
             <div class="card-body">
-                <label for="004">
-                    <input type="radio" id="004" value="4" v-model="avatar" />
+                <label for="4">
+                    <input type="radio" id="4" value="4" v-model="avatar" />
                     <img src="../img/004.png" alt="avatar" class="avatar rounded-circle img-fluid" >
                 </label>
             </div>
             <div class="card-body">
-                <label for="005">
-                    <input type="radio" id="005" value="5" v-model="avatar" />
+                <label for="5">
+                    <input type="radio" id="5" value="5" v-model="avatar" />
                     <img src="../img/005.png" alt="avatar" class="avatar rounded-circle img-fluid" >
                 </label>
             </div>
             <div class="card-body">
-                <label for="006">
-                   <input type="radio" id="006" value="6" v-model="avatar" />
+                <label for="6">
+                   <input type="radio" id="6" value="6" v-model="avatar" />
                    <img src="../img/006.png" alt="avatar" class="avatar rounded-circle img-fluid" >
                 </label>
             </div>
             <div class="card-body">
-                <label for="007">
-                    <input type="radio" id="007" value="7" v-model="avatar" />
+                <label for="7">
+                    <input type="radio" id="7" value="7" v-model="avatar" />
                     <img src="../img/007.png" alt="avatar" class="avatar rounded-circle img-fluid" >
                 </label>
             </div>
             <div class="card-body">
-                <label for="008">
-                    <input type="radio" id="008" value="8" v-model="avatar" />
+                <label for="8">
+                    <input type="radio" id="8" value="8" v-model="avatar" />
                     <img src="../img/008.png" alt="avatar" class="avatar rounded-circle img-fluid" >
                 </label>
             </div>
             <div class="card-body">
-                <label for="009">
-                    <input type="radio" id="009" value="9" v-model="avatar" />
+                <label for="9">
+                    <input type="radio" id="9" value="9" v-model="avatar" />
                     <img src="../img/009.png" alt="avatar" class="avatar rounded-circle img-fluid" >
                 </label>
             </div>
             <div class="card-body">
-                <label for="010">
-                    <input type="radio" id="010" value="10" v-model="avatar" />
+                <label for="10">
+                    <input type="radio" id="10" value="10" v-model="avatar" />
                     <img src="../img/010.png" alt="avatar" class="avatar rounded-circle img-fluid" >
                 </label>
             </div>
             
             </form>
-            <button class="save-btn" @click="validateAndSubimt">
+            <div class="buttons">
+                <button class="save-btn" @click="validateAndSubimt">
                Save 
             </button>
+            <button class="cancel-btn" @click="cancel">
+                Cancel
+            </button>
+            </div>
+            
         </div>
     </div>
 
@@ -107,17 +113,19 @@ export default {
             EmployeeDataService.updateAvatar(this.employeeid, {
                 avatar: this.avatar
             }).then(
-                EmployeeDataService.retrieveEmployee(this.employeeid).then((res) =>{
+                EmployeeDataService.retrieveEmployee(+this.employeeid).then((res) =>{
                     this.$router.push(`/account/${res.data.email}`)
                 })   
             )
             console.log(`Avatar ${this.avatar} was chosen.`)
         }
+    },
+    cancel(){
+        EmployeeDataService.retrieveEmployee(+this.employeeid).then((res) =>{
+            this.$router.push(`/account/${res.data.email}`)
+        })
     }
   },
-  created(){
-
-  }
 };
 </script>
 
@@ -129,7 +137,7 @@ export default {
 
         border: 0;
 
-        padding: 10px 20px;
+        padding: 15px 25px;
 
         margin-top: 20px;
 
@@ -137,11 +145,20 @@ export default {
 
         border-radius: 20px;
 
+        font-family: "Futura XBlk BT", sans-serif;
 
         margin-left: auto;
         margin-right: auto;
 
         margin-bottom: 3em;
+    }
+
+    .cancel-btn{
+        background: #dd3e31;
+    }
+
+    .buttons{
+        display: flex;
     }
 
     h2 {
