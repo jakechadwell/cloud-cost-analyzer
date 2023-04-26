@@ -13,7 +13,12 @@ class AuthDataService {
     }
 
     signIn(credentials) {
-        return axios.post(`${USER_API_URL}/signin`, credentials);
+        return axios.post(`${USER_API_URL}/signin`, credentials)
+    }
+
+    logout(){
+        localStorage.removeItem('user')
+        sessionStorage.clear()
     }
  
 }

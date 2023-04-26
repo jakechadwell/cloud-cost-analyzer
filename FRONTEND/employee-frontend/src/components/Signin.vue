@@ -1,6 +1,6 @@
 <template>
-    <div>
-      <form @submit.prevent="login">
+    <div class="container">
+      <form>
         <h2>Sign In</h2>
         <p v-show="error" class="text-sm danger">{{ errorMsg }}</p>
         <div>
@@ -13,14 +13,15 @@
       </form>
   
       <div class="sub">
-        <button class="px-3" @click="login" :disabled="password.length < 5 || email.length < 6">Login<font-awesome-icon class="pl-2" :icon="['fas', 'right-long']" bounce size="lg" style="color: #ffffff;" /></button>
+        <button class="px-3" @click="handleLogin" :disabled="loading || password.length < 5 || email.length < 6">Login<font-awesome-icon class="pl-2" :icon="['fas', 'right-long']" bounce size="lg" style="color: #ffffff;" />
+        <span v-show="loading" class="spinner-border spinner-border-sm"></span>
+        </button>
       </div>
     </div>
 </template>
 <script>
 import AuthDataService from '../service/AuthDataService'
 
-   
     export default {
         name: 'LoginPage',
         
@@ -29,35 +30,43 @@ import AuthDataService from '../service/AuthDataService'
                 email: '',
                 password: '',
                 role: '',
+                loading: false,
                 error: false,
                 errorMsg: `An error occurred, please try again`
             }
         },
+        computed: {
+            loggedIn(){
+                return this.$store.state.auth.status.loggedIn;
+            }
+        },
+        created(){
+            if(this.loggedIn){
+                this.$router.push('/account');
+            }
+        },
         methods: {
-            async login(e) {
-                e.preventDefault()
-                AuthDataService.retrieveCredentials(this.email).then((res)=>{
-                    try {
-                        AuthDataService.signIn({
-                        email: this.email,
-                        password: this.password,
-                        role: res.data.role
-                    }).then((res) => {
-                        window.localStorage.setItem('jwt', res.data.tokenString)
-                        window.localStorage.setItem('userData', JSON.stringify(res.data))
-                        
-                    })
-                    // window.localStorage.setItem('Authorization', `Bearer ${jwt.tokenString}`)
-                    this.$router.push('/')
-                } catch(error) {
-                    this.error = true
-                    this.password = ''
-                    console.log(error)
+            handleLogin(){
+                this.loading = true;
+                if(this.email && this.password){
+                    AuthDataService.retrieveCredentials(this.email).then((res) =>{
+                        this.$store.dispatch('auth/login', {email: this.email, password: this.password, role: res.data.role}).then(
+                        (response) => {
+                            if(response.data.tokenString){
+                                localStorage.setItem('user', JSON.stringify(response.data))
+                                this.$router.push('/account/' + JSON.parse(localStorage.getItem('user')).email);
+                            }
+                            
+                        },
+                        error => {
+                            this.loading = false;
+                            this.error = true;
+                            this.errorMsg = error.toString();
+                        }
+                        )
+                    })  
                 }
-
-                });
-                
-            },
+            }
         }
     }
 </script>
@@ -109,7 +118,7 @@ form {
     }
 
     button {
-        background: #0b6dff;
+        background: #01b9ff;
 
         border: 0;
 
@@ -124,5 +133,10 @@ form {
 
     .sub {
         text-align: center;
+    }
+
+    h2{
+        text-align: center;
+        padding-bottom: 1em;
     }
 </style>

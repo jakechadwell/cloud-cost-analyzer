@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container">
     <form @submit.prevent="register">
       <h2>Register</h2>
       <p v-show="error" class="text-sm danger">{{ errorMsg }}</p>
@@ -16,7 +16,7 @@
     </form>
 
     <div class="sub">
-      <button class="px-3" @click="register" :disabled="password.length < 5 || email.length < 6">Submit<font-awesome-icon class="pl-2" :icon="['fas', 'right-long']" bounce size="lg" style="color: #ffffff;" /></button>
+      <button class="px-3" @click="handleRegister" :disabled="password.length < 5 || email.length < 6">Submit<font-awesome-icon class="pl-2" :icon="['fas', 'right-long']" bounce size="lg" style="color: #ffffff;" /></button>
     </div>
   </div>
 </template>
@@ -24,7 +24,7 @@
 import AuthDataService from '../service/AuthDataService'
 
 export default {
-  name: "RegisterPage",
+  name: "Register",
   data() {
     return {
       email: "",
@@ -34,23 +34,46 @@ export default {
       errorMsg: `An Error occurred, please try again`,
     };
   },
+  computed:{
+    loggedIn(){
+      return this.$store.state.auth.status.loggedIn;
+    }
+  },
+  mounted(){
+    if(this.loggedIn){
+      this.$router.push('/account');
+    }
+  },
   methods: {
-    async register(e) {
+    handleRegister(){
+      this.$store.dispatch('auth/register', {email: this.email, password: this.password, role: 'user'}).then(
+        () => {
+          this.$router.push('/signin')
+        },
+        error => {
+          this.error = true;
+          this.errorMsg = error.toString();
+          this.password = "";
+          this.password2 = "";
+        }
+      )
+    }
+    // async register(e) {
         
-      try {
-        e.preventDefault();
-        await AuthDataService.signUp({
-            email: this.email,
-            password: this.password,
-            role: 'user'
-        });
-        this.$router.push("/signin");
-      } catch (e) {
-        this.error = true;
-        this.password = "";
-        this.password2 = "";
-      }
-    },
+    //   try {
+    //     e.preventDefault();
+    //     await AuthDataService.signUp({
+    //         email: this.email,
+    //         password: this.password,
+    //         role: 'user'
+    //     });
+    //     this.$router.push("/signin");
+    //   } catch (e) {
+    //     this.error = true;
+    //     this.password = "";
+    //     this.password2 = "";
+    //   }
+    // },
   },
 };
 </script>
@@ -102,7 +125,7 @@ export default {
     }
 
     button {
-        background: #0b6dff;
+        background: #01b9ff;
 
         border: 0;
 
@@ -117,5 +140,10 @@ export default {
 
     .sub {
         text-align: center;
+    }
+
+    h2{
+        text-align: center;
+        padding-bottom: 1em;
     }
 </style>

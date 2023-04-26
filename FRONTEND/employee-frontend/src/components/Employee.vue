@@ -1,6 +1,6 @@
 <template>
-    <div>
-      <h3>Employee</h3>
+    <div class="container">
+      <h3>Employee ID: {{ this.employeeid }}</h3>
       <div class="container">
         <form @submit="validateAndSubmit">
           <div v-if="errors.length">
@@ -52,6 +52,11 @@
             <input type="text" class="form-control"
              v-model="infographics" />
           </fieldset>
+          <fieldset hidden class="form-group">
+            <label>Avatar</label>
+            <input type="text" class="form-control"
+             v-bind:value="avatar"/>
+          </fieldset>
           <button class="btn btn-success" 
           type="submit">Save</button>
         </form>
@@ -73,6 +78,7 @@
         trainingPath: "",
         email: "",
         infographics: "",
+        avatar: "",
         errors: [],
       };
     },
@@ -85,7 +91,6 @@
       refreshEmployeeDetails() {
         EmployeeDataService.retrieveEmployee(this.employeeid).then((res) => {
           this.firstName = res.data.firstName;
-          console.log(res.data)
           this.lastName = res.data.lastName;
           this.dept = res.data.dept;
           this.cloud = res.data.cloud;
@@ -93,6 +98,7 @@
           this.trainingPath = res.data.trainingPath;
           this.email = res.data.email;
           this.infographics = res.data.infographics;
+          this.avatar = res.data.avatar;
         });
       },
       validateAndSubmit(e) {
@@ -120,9 +126,10 @@
                 trainingAttended: this.trainingAttended,
                 trainingPath: this.trainingPath,
                 email: this.email,
-                infographics: this.infographics
+                infographics: this.infographics,
+                avatar : this.avatar
             }).then(() => {
-              this.$router.push("/employees");
+              this.$router.push("/");
             });
           }
         }

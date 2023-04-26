@@ -1,7 +1,9 @@
 <template>
-  <h1 class="text-center p-5 mt-5">
-    Training  &  Voucher <br />Management  Application
-  </h1>
+  <div class="container">
+    <h1 class="text-center p-5 mt-5">
+      Training  &  Voucher <br />Management  Application
+    </h1>
+  </div>
 </template>
 <style>
 @import url('https://fonts.cdnfonts.com/css/futura-xblk-bt');
@@ -15,8 +17,8 @@ h1 {
   margin: 10%;
 }
 
-.container{
-    margin-top: 15%;
+div .container{
+    margin-top: 15% !important;
 }
 </style>
 
