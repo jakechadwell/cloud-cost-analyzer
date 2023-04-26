@@ -3,6 +3,14 @@
         <div class="card">
             <p v-show="error" class="text-sm danger">{{ errorMsg }}</p>
             <h2>Select an Avatar</h2>
+            <div class="buttons">
+                <button class="save-btn" @click="validateAndSubimt">
+                    Save 
+                </button>
+                <button class="cancel-btn" @click="cancel">
+                    Cancel
+                </button>
+            </div>
             <form @submit="validateAndSubimt">
             <div class="card-body">
                 
@@ -68,14 +76,7 @@
             </div>
             
             </form>
-            <div class="buttons">
-                <button class="save-btn" @click="validateAndSubimt">
-               Save 
-            </button>
-            <button class="cancel-btn" @click="cancel">
-                Cancel
-            </button>
-            </div>
+            
             
         </div>
     </div>
@@ -147,10 +148,9 @@ export default {
 
         font-family: "Futura XBlk BT", sans-serif;
 
-        margin-left: auto;
-        margin-right: auto;
+        margin-left: 30%;
+        margin-right: -5em;
 
-        margin-bottom: 3em;
     }
 
     .cancel-btn{
@@ -195,11 +195,13 @@ export default {
         display: flex;
         margin: auto;
         -webkit-box-shadow: 0 0.5rem 1rem rgba(0, 0, 16, 0.19), 0 0.3rem 0.3rem rgba(0, 0, 16, 0.23);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 16, 0.19), 0 0.3rem 0.3rem rgba(0, 0, 16, 0.23);
+        /* box-shadow: 0 0.5rem 1rem rgba(0, 0, 16, 0.19), 0 0.3rem 0.3rem rgba(0, 0, 16, 0.23); */
+        box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
         background-color: rgb(255, 255, 255);
         padding: 0.8rem;
         border: none;
         border-radius: 2%;
+        margin-bottom: 3em;
     }
 
 
