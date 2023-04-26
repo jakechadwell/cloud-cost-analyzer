@@ -14,7 +14,7 @@ class EmployeeDataService {
     }
 
     retrieveEmployeeByEmail(email) {
-        return axios.get(`${USER_API_URL}/employees/${email}`);
+        return axios.get(`${USER_API_URL}/employee/${email}`);
     }
 
     deleteEmployee(employeeid) {
@@ -31,6 +31,10 @@ class EmployeeDataService {
 
         return axios.post(`${USER_API_URL}/employees`, employee);
     }   
+
+    updateAvatar(employeeid, avatar){
+        return axios.put(`${USER_API_URL}/edit/avatar/${employeeid}`, avatar);
+    }
 }
 
 export default new EmployeeDataService()

@@ -1,6 +1,7 @@
 import Vue from "vue";
 import Router from "vue-router";
 import AuthDataService from "./service/AuthDataService";
+import EmployeeDataService from "./service/EmployeeDataService";
 
 Vue.use(Router);
 
@@ -83,6 +84,24 @@ const router = new Router({
                 authRequired: 'false'
             }
         },
+        {
+            path: "/account/:email",
+            component: () => import("./components/Account"),
+            meta: {
+                authRequired: 'false'
+            }
+        },
+        {
+            path: "/account/employee/:employeeid",
+            redirect: "/employee/:employeeid"
+        },
+        {
+            path: "/edit/avatar/:employeeid",
+            component: () => import("./components/Avatar"),
+            meta: {
+                authRequired: 'true'
+            }
+        }
     ]
 });
 
@@ -90,13 +109,14 @@ router.beforeEach((to, from, next) => {
     // console.log('to.meta.authRequired ', to.meta.authRequired)
     if(to.meta.authRequired === 'true') {
         var role = window.localStorage.getItem("role");
-        var email = window.localStorage.getItem("email");
+        var email = JSON.parse(window.localStorage.getItem("user")).email;
         const emailid = to.params.email;
-        console.log(role)
-        console.log('admin')
         if(
             role == 'admin' ||
-            emailid === email
+            emailid === email ||
+            EmployeeDataService.retrieveEmployeeByEmail(email).then((res)=>{
+                to.params.employeeid == res.data.employeeid;
+            })
         ){
             return next()
         }else{
@@ -105,6 +125,9 @@ router.beforeEach((to, from, next) => {
     }else{
         return next()
     }
+
+
+
 })
 
 export default router;

@@ -79,6 +79,7 @@
         trainingPath: "",
         email: "",
         infographics: "",
+        avatar: "",
         errors: [],
       };
     },
@@ -94,6 +95,7 @@
           this.trainingPath = res.data.trainingPath;
           this.email = res.data.email;
           this.infographics = res.data.infographics;
+          this.avatar = '10';
         });
       },
       validateAndSubmit(e) {
@@ -121,7 +123,8 @@
                 trainingAttended: this.trainingAttended,
                 trainingPath: this.trainingPath,
                 email: this.email,
-                infographics: this.infographics
+                infographics: this.infographics,
+                avatar: this.avatar
             }).then(() => {
               this.$router.push("/employees");
             });

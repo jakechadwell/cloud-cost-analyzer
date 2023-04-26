@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './routes.js';
+import store from './store';
 import BootstrapVue, { BootstrapVueIcons } from 'bootstrap-vue';
 /* import the fontawesome core */
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -22,5 +23,6 @@ Vue.config.productionTip = false
 Vue.use(BootstrapVue, BootstrapVueIcons)
 new Vue({
   router,
+  store,
   render: h => h(App),
 }).$mount('#app')
