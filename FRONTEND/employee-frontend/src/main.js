@@ -10,10 +10,10 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 /* import specific icons */
-import { faRightLong } from '@fortawesome/free-solid-svg-icons'
+import { faRightLong,  faMagnifyingGlass} from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
-library.add(faRightLong)
+library.add(faRightLong, faMagnifyingGlass)
 
 /* add font awesome icon component */
 Vue.component('font-awesome-icon', FontAwesomeIcon)

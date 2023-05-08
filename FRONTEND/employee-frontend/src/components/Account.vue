@@ -5,7 +5,7 @@
         <div class="main-card card top">
           <div class="card-body av text-center ">
             <div class="avatar-container">
-              <img v-if="avatar==1" src="../img/001.png" alt="avatar"
+                <img v-if="avatar==1" src="../img/001.png" alt="avatar"
                 class="avatar rounded-circle img-fluid" style="width: 150px;">
                 <img v-if="avatar==2" src="../img/002.png" alt="avatar"
                 class="avatar rounded-circle img-fluid" style="width: 150px;">
@@ -25,13 +25,13 @@
                 class="avatar rounded-circle img-fluid" style="width: 150px;">
                 <img v-if="avatar==10" src="../img/010.png" alt="avatar"
                 class="avatar rounded-circle img-fluid" style="width: 150px;">
-              
+                
 
-              <div class="content" @click.prevent="avatarRedirect(employeeid)">
+              <div v-if="currentUser" class="content" @click.prevent="avatarRedirect(employeeid)">
                 <div class="text">Edit Avatar</div>
               </div>
             </div>
-            <div class="edit-btn-div rounded-circle img-fluid">
+            <div v-if="currentUser" class="edit-btn-div rounded-circle img-fluid">
               <img @click.prevent="editRedirect(employeeid)" title="Edit Employee Details" src="../img/edit.png" alt="edit"
               class="rounded-circle img-fluid edit-btn">
             </div>
@@ -142,12 +142,7 @@ export default {
     this.refreshUserDetails();
     this.refreshRole();
     
-  }
-  // mounted() {
-  //   if (!this.currentUser) {
-  //     this.$router.push('/signin');
-  //   }
-  // }
+  },
 };  
 </script>
 

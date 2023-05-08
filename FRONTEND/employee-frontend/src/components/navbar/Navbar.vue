@@ -43,7 +43,7 @@
 
 <style>
 @import url('https://fonts.cdnfonts.com/css/futura-xblk-bt');
-
+@import url('https://fonts.cdnfonts.com/css/fox-corporation-logo');
   body{
     font-size: 1.25em !important;
   }

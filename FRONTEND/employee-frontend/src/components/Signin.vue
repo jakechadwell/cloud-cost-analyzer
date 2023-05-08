@@ -13,14 +13,15 @@
       </form>
   
       <div class="sub">
-        <button class="px-3" @click="handleLogin" :disabled="loading || password.length < 5 || email.length < 6">Login<font-awesome-icon class="pl-2" :icon="['fas', 'right-long']" bounce size="lg" style="color: #ffffff;" />
-        <span v-show="loading" class="spinner-border spinner-border-sm"></span>
+        <button class="px-3" @click="handleLogin" :disabled="loading || password.length < 5 || email.length < 6"><span v-show="loading" class="spinner-border spinner-border-sm"></span>Login<font-awesome-icon class="pl-2" :icon="['fas', 'right-long']" bounce size="lg" style="color: #ffffff;" />
+        
         </button>
       </div>
     </div>
 </template>
 <script>
 import AuthDataService from '../service/AuthDataService'
+import EmployeeDataService from '../service/EmployeeDataService';
 
     export default {
         name: 'LoginPage',
@@ -54,7 +55,15 @@ import AuthDataService from '../service/AuthDataService'
                         (response) => {
                             if(response.data.tokenString){
                                 localStorage.setItem('user', JSON.stringify(response.data))
-                                this.$router.push('/account/' + JSON.parse(localStorage.getItem('user')).email);
+                                // this.$router.push('/account/' + JSON.parse(localStorage.getItem('user')).email);
+                                EmployeeDataService.retrieveEmployeeByEmail(this.email).then((res)=>{
+                                  if(res.data.email == ''){
+                                    this.$router.push('/employee/new')
+                                  }else{
+                                    this.$router.push('/account/' + JSON.parse(localStorage.getItem('user')).email);
+                                  }  
+                                })
+                                
                             }
                             
                         },

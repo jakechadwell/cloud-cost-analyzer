@@ -21,7 +21,7 @@ const router = new Router({
             name: "NewEmployee",
             component: () => import("./components/NewEmployee"),
             meta: {
-                authRequired: 'true'
+                authRequired: 'false'
             }
         },
         {
@@ -101,6 +101,13 @@ const router = new Router({
             meta: {
                 authRequired: 'true'
             }
+        },
+        {
+            path: "/dashboard",
+            component: () => import("./components/TrainingDashboard"),
+            meta: {
+                authRequired: 'true'
+            }
         }
     ]
 });
@@ -108,20 +115,29 @@ const router = new Router({
 router.beforeEach((to, from, next) => {
     // console.log('to.meta.authRequired ', to.meta.authRequired)
     if(to.meta.authRequired === 'true') {
-        var role = window.localStorage.getItem("role");
-        var email = JSON.parse(window.localStorage.getItem("user")).email;
-        const emailid = to.params.email;
-        if(
-            role == 'admin' ||
-            emailid === email ||
-            EmployeeDataService.retrieveEmployeeByEmail(email).then((res)=>{
-                to.params.employeeid == res.data.employeeid;
-            })
-        ){
-            return next()
-        }else{
+        var role = JSON.parse(window.localStorage.getItem("user")).role;
+        const routeEmail = to.params.email;
+        const routeid = to.params.employeeid;
+        if(JSON.parse(window.localStorage.getItem("user")) == null){
             router.push('/unauthorized')
         }
+        var id;
+        var email = JSON.parse(window.localStorage.getItem("user")).email;
+        if(role == 'user' && to.fullPath == '/dashboard'){
+            return next()
+        }
+        EmployeeDataService.retrieveEmployeeByEmail(email).then((res)=>{
+            id=res.data.employeeid
+            if(
+                role == 'admin' ||
+                routeEmail === email ||
+                routeid === id
+            ){
+                return next()
+            }else{
+                router.push('/unauthorized')
+            }
+        })
     }else{
         return next()
     }

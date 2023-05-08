@@ -58,22 +58,6 @@ export default {
         }
       )
     }
-    // async register(e) {
-        
-    //   try {
-    //     e.preventDefault();
-    //     await AuthDataService.signUp({
-    //         email: this.email,
-    //         password: this.password,
-    //         role: 'user'
-    //     });
-    //     this.$router.push("/signin");
-    //   } catch (e) {
-    //     this.error = true;
-    //     this.password = "";
-    //     this.password2 = "";
-    //   }
-    // },
   },
 };
 </script>

@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-      <h3>New Employee</h3>
+      <h3>Welcome, Please Enter Your Employee Details Below:</h3>
       <div class="container">
         <form @submit="validateAndSubmit">
           <div v-if="errors.length">
@@ -124,9 +124,9 @@
                 trainingPath: this.trainingPath,
                 email: this.email,
                 infographics: this.infographics,
-                avatar: this.avatar
+                avatar: '10'
             }).then(() => {
-              this.$router.push("/employees");
+              this.$router.push(`/account/${this.email}`);
             });
         }
         }
