@@ -3,19 +3,21 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	_ "go/token"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	// "golang.org/x/crypto/bcrypt"
-	// "github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Employee struct{
@@ -28,6 +30,7 @@ type Employee struct{
 	TrainingPath string `json:"trainingPath"`
 	Email string `json:"email"`
 	Infographics string `json:"infographics"`
+	Avatar string `json:"avatar"`
 }
 
 type Training struct{
@@ -45,6 +48,26 @@ type Attribute struct{
 	AttributeType string `json:"attributeType"`
 	Count string `json:"count"`
 	Course string `json:"course"`
+}
+
+type Cloud struct {
+	CloudID                string `json:"cloudid"`                //Could reasonably be an integer instead of string
+	CloudTrainingPath      string `json:"cloudtrainingpath"`      //not sure what cloud training path is, set as string for now
+	CloudTrainingAvailable string `json:"cloudtrainingavailable"` //Set as string so we can list out multiple trainings
+	CloudPointOfContact    string `json:"cloudpointofcontact"`    //Guessing this is actually the person you reach out to about training
+	ExternalTrainingPoc    string `json:"externalcontactpoc"`      //Likely the external contact for the training provided, could be saved as a name and/or phone number
+}
+
+type Credentials struct {
+	Email string `json:"email"`
+	Password string `json:"password"`
+	Role string `json:"role"`
+}
+
+type Token struct {
+	Role string `json:"role"`
+	Email string `json:"email"`
+	TokenString string `json:"tokenString"`
 }
 
 //Check Error Function
@@ -74,21 +97,28 @@ func getEnvVars(){
 	}
 }
 
-//JWT Authentication
-// var SECRET_KEY = []byte("gosecretkey")
+// JWT Authentication
 
-// func getHash(pwd []byte) string{
-// 	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
-// 	checkErr(err)
-// 	return string(hash)
-// }
+func getHash(pwd []byte) string{
+	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
+	checkErr(err)
+	return string(hash)
+}
 
-// func GenerateJWT()(string, error){
-// 	token := jwt.New(jwt.SigningMethodHS256)
-// 	tokenString, err := token.SignedString(SECRET_KEY)
-// 	checkErr(err)
-// 	return tokenString, nil
-// }
+func GenerateJWT(email, role string)(string, error){
+	var SECRET_KEY = []byte("gosecretkey")
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+
+	claims["authorized"] = true
+	claims["email"] = email
+	claims["role"] = role
+	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+
+	tokenString, err := token.SignedString(SECRET_KEY)
+	checkErr(err)
+	return tokenString, nil
+}
 
 
 //Main Function
@@ -99,6 +129,10 @@ func main(){
 	router := mux.NewRouter()
 
 	//Employee Routes
+
+	router.HandleFunc("/edit/avatar/{employeeid}", UpdateAvatar).Methods("PUT")
+
+	router.HandleFunc("/employee/{email}", GetEmployeeByEmail).Methods("GET")
 
 	router.HandleFunc("/employees", GetEmployees).Methods("GET")
 
@@ -122,23 +156,72 @@ func main(){
 
 	router.HandleFunc("/trainings", CreateTraining).Methods("POST")
 
-	//Attribute Routes
+	//Cloud Routes
 
-	router.HandleFunc("/attributes", GetAttributes).Methods("GET")
+	router.HandleFunc("/cloud", GetCloudIDs).Methods("GET")
 
-	router.HandleFunc("/attributes/{attributeid}", GetAttribute).Methods("GET")
+	router.HandleFunc("/cloud/{cloudid}", GetCloudID).Methods("GET")
 
-	router.HandleFunc("/attributes", CreateAttribute).Methods("POST")
+	router.HandleFunc("/cloud", CreateCloudID).Methods("POST")
 
-	router.HandleFunc("/attributes/{attributeid}", UpdateAttribute).Methods("PUT")
+	router.HandleFunc("/cloud/{cloudid}", UpdateCloudID).Methods("PUT")
 
-	router.HandleFunc("/attributes/{attributeid}", DeleteAttribute).Methods("DELETE")
+	router.HandleFunc("/cloud/{cloudid}", DeleteCloudID).Methods("DELETE")
+
+	//Credential Routes
+
+	router.HandleFunc("/credentials", GetCredentials).Methods("GET")
+
+	router.HandleFunc("/credentials/{email}", GetCredential).Methods("GET")
+
+	router.HandleFunc("/credentials", CreateCredentials).Methods("POST")
+
+	router.HandleFunc("/credentials/{email}", UpdateCredentials).Methods("PUT")
+
+	router.HandleFunc("/credentials/{email}", DeleteCredentials).Methods("DELETE")
+
+	//Auth Routes
+
+	router.HandleFunc("/signin", SignIn).Methods("POST")
+
+	router.HandleFunc("/signup", SignUp).Methods("POST")
 
 	fmt.Println("Listening at port 9080")
 	log.Fatal(http.ListenAndServe(":9080", &CORSRouterDecorator{router}))
 }
 
 //EMPLOYEE METHODS//
+
+//Get Single Employee by Email
+func GetEmployeeByEmail(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	result, err := db.Query("SELECT * FROM employees WHERE email = $1", params["email"])
+	checkErr(err)
+	defer result.Close()
+	var employee Employee
+	for result.Next(){
+		err := result.Scan(&employee.EmployeeID, &employee.FirstName, &employee.LastName, &employee.Dept, &employee.Cloud, &employee.TrainingAttended, &employee.TrainingPath, &employee.Email, &employee.Infographics, &employee.Avatar)
+		checkErr(err)
+	}
+	json.NewEncoder(w).Encode(employee)
+}
+
+//Update Employee Avatar
+func UpdateAvatar(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	stmt, err := db.Prepare("UPDATE employees SET avatar = $1 WHERE employee_id = $2")
+	checkErr(err)
+	body, err := ioutil.ReadAll(r.Body)
+	checkErr(err)
+	keyVal := make(map[string]string)
+    json.Unmarshal(body, &keyVal)
+	avatar := keyVal["avatar"]
+    _, err = stmt.Exec( avatar, params["employeeid"])
+    checkErr(err)
+    fmt.Fprintf(w, "Avatar for Employee with ID = %s was updated", params["employeeid"])
+}
 
 //Get Single Employee
 func GetEmployee(w http.ResponseWriter, r *http.Request){
@@ -149,7 +232,7 @@ func GetEmployee(w http.ResponseWriter, r *http.Request){
 	defer result.Close()
 	var employee Employee
 	for result.Next(){
-		err := result.Scan(&employee.EmployeeID, &employee.FirstName, &employee.LastName, &employee.Dept, &employee.Cloud, &employee.TrainingAttended, &employee.TrainingPath, &employee.Email, &employee.Infographics)
+		err := result.Scan(&employee.EmployeeID, &employee.FirstName, &employee.LastName, &employee.Dept, &employee.Cloud, &employee.TrainingAttended, &employee.TrainingPath, &employee.Email, &employee.Infographics, &employee.Avatar)
 		checkErr(err)
 	}
 	json.NewEncoder(w).Encode(employee)
@@ -164,7 +247,7 @@ func GetEmployees(w http.ResponseWriter, r *http.Request){
 	defer result.Close()
 	for result.Next() {
 		var employee Employee
-		err := result.Scan(&employee.EmployeeID, &employee.FirstName, &employee.LastName, &employee.Dept, &employee.Cloud, &employee.TrainingAttended, &employee.TrainingPath, &employee.Email, &employee.Infographics)
+		err := result.Scan(&employee.EmployeeID, &employee.FirstName, &employee.LastName, &employee.Dept, &employee.Cloud, &employee.TrainingAttended, &employee.TrainingPath, &employee.Email, &employee.Infographics, &employee.Avatar)
 		checkErr(err)
 		employees = append(employees, employee)
 	}
@@ -174,7 +257,7 @@ func GetEmployees(w http.ResponseWriter, r *http.Request){
 //Create Employee
 func CreateEmployee(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
-	stmt, err := db.Prepare("INSERT INTO employees(employee_id, first_name, last_name, dept, cloud, training_attended, training_path, email, infographics) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)")
+	stmt, err := db.Prepare("INSERT INTO employees(employee_id, first_name, last_name, dept, cloud, training_attended, training_path, email, infographics, avatar) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)")
 	checkErr(err)
 	body, err := ioutil.ReadAll(r.Body)
 	checkErr(err)
@@ -189,7 +272,8 @@ func CreateEmployee(w http.ResponseWriter, r *http.Request){
 	training_path := keyVal["trainingPath"]
 	email := keyVal["email"]
 	infographics := keyVal["infographics"]
-	_, err = stmt.Exec(employee_id, first_name, last_name, dept, cloud, training_attended, training_path, email, infographics)
+	avatar := keyVal["avatar"]
+	_, err = stmt.Exec(employee_id, first_name, last_name, dept, cloud, training_attended, training_path, email, infographics, avatar)
 	checkErr(err)
 	fmt.Fprintln(w, "New Employee Was Created")
 }
@@ -209,7 +293,7 @@ func DeleteEmployee(w http.ResponseWriter, r *http.Request){
 func UpdateEmployee(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	stmt, err := db.Prepare("UPDATE employees SET first_name = $1, last_name = $2, dept = $3, cloud = $4, training_attended = $5, training_path = $6, email = $7, infographics = $8 WHERE employee_id = $9")
+	stmt, err := db.Prepare("UPDATE employees SET first_name = $1, last_name = $2, dept = $3, cloud = $4, training_attended = $5, training_path = $6, email = $7, infographics = $8, avatar = $9 WHERE employee_id = $10")
 	checkErr(err)
 	body, err := ioutil.ReadAll(r.Body)
 	checkErr(err)
@@ -223,7 +307,8 @@ func UpdateEmployee(w http.ResponseWriter, r *http.Request){
 	training_path := keyVal["trainingPath"]
 	email := keyVal["email"]
 	infographics := keyVal["infographics"]
-    _, err = stmt.Exec(first_name, last_name, dept, cloud, training_attended, training_path, email, infographics, params["employeeid"])
+	avatar := keyVal["avatar"]
+    _, err = stmt.Exec(first_name, last_name, dept, cloud, training_attended, training_path, email, infographics, avatar, params["employeeid"])
     checkErr(err)
     fmt.Fprintf(w, "User with ID = %s was updated", params["employeeid"])
 }
@@ -232,6 +317,7 @@ func UpdateEmployee(w http.ResponseWriter, r *http.Request){
 
 //Get All Trainings
 func GetTrainings(w http.ResponseWriter, r *http.Request){
+	IsAuthorized(AdminIndex)
 	w.Header().Set("Content-Type", "application/json")
 	var trainings []Training
 	result, err := db.Query("SELECT * FROM trainings")
@@ -310,89 +396,289 @@ func DeleteTraining(w http.ResponseWriter, r *http.Request){
 	fmt.Fprintf(w, "Training with ID = %s Has Been Deleted", params["trainingid"])
 }
 
+//CLOUD METHODS//
 
-//Attributes Methods
-
-//Get All Attributes
-func GetAttributes(w http.ResponseWriter, r *http.Request){
+// Get All CloudIDs
+func GetCloudIDs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var attributes []Attribute
-	result, err := db.Query("SELECT * FROM attributes")
+	var clouds []Cloud
+	result, err := db.Query("SELECT * FROM clouds")
 	checkErr(err)
 	defer result.Close()
 	for result.Next() {
-		var attribute Attribute
-		err = result.Scan(&attribute.AttributeID, &attribute.AttributeName, &attribute.Stage, &attribute.AttributeType, &attribute.Count, &attribute.Course)
+		var cloud Cloud
+		err = result.Scan(&cloud.CloudID, &cloud.CloudTrainingPath, &cloud.CloudTrainingAvailable, &cloud.CloudPointOfContact, &cloud.ExternalTrainingPoc)
 		checkErr(err)
-		attributes = append(attributes, attribute)
+		clouds = append(clouds, cloud)
 	}
-	json.NewEncoder(w).Encode(attributes)
+	json.NewEncoder(w).Encode(clouds)
 }
 
-//Get Single Attribute
-func GetAttribute(w http.ResponseWriter, r *http.Request){
+// Get Single CloudID
+func GetCloudID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	result, err := db.Query("SELECT * FROM attributes WHERE attribute_id = $1", params["attributeid"])
+	result, err := db.Query("SELECT * FROM clouds WHERE cloud_id = $1", params["cloudid"])
 	checkErr(err)
 	defer result.Close()
-	var attribute Attribute
-	for result.Next(){
-		err := result.Scan(&attribute.AttributeID, &attribute.AttributeName, &attribute.Stage, &attribute.AttributeType, &attribute.Count, &attribute.Course)
+	var cloud Cloud
+	for result.Next() {
+		err := result.Scan(&cloud.CloudID, &cloud.CloudTrainingPath, &cloud.CloudTrainingAvailable, &cloud.CloudPointOfContact, &cloud.ExternalTrainingPoc)
 		checkErr(err)
 	}
-	json.NewEncoder(w).Encode(attribute)
+	json.NewEncoder(w).Encode(cloud)
 }
 
-//Create Attribute
-func CreateAttribute(w http.ResponseWriter, r *http.Request){
+// Create CloudID
+func CreateCloudID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	stmt, err := db.Prepare("INSERT INTO attributes(attribute_id, attribute_name, stage, attribute_type, count, course) VALUES ($1, $2 , $3, $4, $5, $6)")
+	stmt, err := db.Prepare("INSERT INTO clouds(cloud_id, cloudtraining_path, cloudtraining_available, cloud_point_of_contact, external_training_poc) VALUES ($1, $2 , $3, $4, $5, $6)")
 	checkErr(err)
 	body, err := ioutil.ReadAll(r.Body)
 	checkErr(err)
 	keyVal := make(map[string]string)
 	json.Unmarshal(body, &keyVal)
-	attribute_id := keyVal["attributeid"]
-	attribute_name := keyVal["attributeName"]
-	stage := keyVal["stage"]
-	attribute_type := keyVal["attributeType"]
-	count := keyVal["count"]
-	course := keyVal["course"]
-	_, err = stmt.Exec(attribute_id, attribute_name, stage, attribute_type, count, course)
+	cloud_id := keyVal["cloudid"]
+	cloudtraining_path := keyVal["cloudtrainingpath"]
+	cloudtraining_available := keyVal["cloudtrainingavailable"]
+	cloud_point_of_contact := keyVal["cloudpointofcontact"]
+	external_training_poc := keyVal["externaltrainingpoc"]
+	_, err = stmt.Exec(cloud_id, cloudtraining_path, cloudtraining_available, cloud_point_of_contact, external_training_poc)
 	checkErr(err)
-	fmt.Fprintln(w, "New Attribute Has Been Created")
-}	
+	fmt.Fprintln(w, "New CloudID Has Been Created")
+}
 
-//Update Attribute
-func UpdateAttribute(w http.ResponseWriter, r *http.Request){
+// Update CloudID
+func UpdateCloudID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	stmt, err := db.Prepare("UPDATE attributes SET attribute_name = $1, stage = $2, attribute_type = $3, count = $4, course = $5 WHERE attribute_id = $6")
+	stmt, err := db.Prepare("UPDATE clouds SET cloudtraining_path = $1, cloudtraining_available = $2, cloud_point_of_contact = $3, external_training_poc = $4, WHERE cloud_id = $6")
 	checkErr(err)
 	body, err := ioutil.ReadAll(r.Body)
 	checkErr(err)
 	keyVal := make(map[string]string)
 	json.Unmarshal(body, &keyVal)
-	attribute_name := keyVal["attributeName"]
-	stage := keyVal["stage"]
-	attribute_type := keyVal["attributeType"]
-	count := keyVal["count"]
-	course := keyVal["course"]
-	_, err = stmt.Exec(attribute_name, stage, attribute_type, count, course, params["attributeid"])
+	cloudtraining_path := keyVal["cloudtrainingpath"]
+	cloudtraining_available := keyVal["cloudtrainingavailable"]
+	cloud_point_of_contact := keyVal["cloudpointofcontact"]
+	external_training_poc := keyVal["externaltrainingpoc"]
+	_, err = stmt.Exec(cloudtraining_path, cloudtraining_available, cloud_point_of_contact, external_training_poc, params["cloudid"])
 	checkErr(err)
-	fmt.Fprintf(w, "Attribute with ID = %s was Updated", params["attributeid"])
+	fmt.Fprintf(w, "CloudID with ID = %s was Updated", params["cloudid"])
 }
 
-//Delete Attribute
-func DeleteAttribute(w http.ResponseWriter, r *http.Request){
+// Delete CloudID
+func DeleteCloudID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	stmt, err := db.Prepare("DELETE FROM attributes WHERE attribute_id = $1")
+	stmt, err := db.Prepare("DELETE FROM clouds WHERE cloud_id = $1")
 	checkErr(err)
-	_, err = stmt.Exec(params["attributeid"])
+	_, err = stmt.Exec(params["cloudid"])
 	checkErr(err)
-	fmt.Fprintf(w, "Attribute with ID = %s Has Been Deleted", params["attributeid"])
+	fmt.Fprintf(w, "CloudID with ID = %s Has Been Deleted", params["cloudid"])
+}
+
+// Credentials Methods
+
+// Get All Credentials
+func GetCredentials(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	var credentials []Credentials
+	result, err := db.Query("SELECT * FROM credentials")
+	checkErr(err)
+	defer result.Close()
+	for result.Next() {
+		var credential Credentials
+		err = result.Scan(&credential.Email, &credential.Password, &credential.Role)
+		checkErr(err)
+		credentials = append(credentials, credential)
+	}
+	json.NewEncoder(w).Encode(credentials)
+}
+
+// Get Single Credential
+func GetCredential(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	result, err := db.Query("SELECT * FROM credentials WHERE email=$1", params["email"])
+	checkErr(err)
+	defer result.Close()
+	var credential Credentials
+	for result.Next() {
+		err := result.Scan(&credential.Email, &credential.Password, &credential.Role)
+		checkErr(err)
+	}
+	json.NewEncoder(w).Encode(credential)
+}
+
+// Create Credentials
+func CreateCredentials(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	stmt, err := db.Prepare("INSERT INTO credentials(email, password, role) VALUES ($1, $2, $3)")
+	checkErr(err)
+	body, err := ioutil.ReadAll(r.Body)
+	checkErr(err)
+	keyVal := make(map[string]string)
+	json.Unmarshal(body, &keyVal)
+	email := keyVal["email"]
+	password := keyVal["password"]
+	role := keyVal["role"]
+	_, err = stmt.Exec(email, password, role)
+	checkErr(err)
+	fmt.Fprintln(w, "New Credentials Have Been Created")
+}
+
+// Update Credentials
+func UpdateCredentials(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	stmt, err := db.Prepare("UPDATE credentials SET email=$1, password=$2, role=$3 WHERE email = $4")
+	checkErr(err)
+	body, err := ioutil.ReadAll(r.Body)
+	checkErr(err)
+	keyVal := make(map[string]string)
+	json.Unmarshal(body, &keyVal)
+	email := keyVal["email"]
+	password := keyVal["password"]
+	role := keyVal["role"]
+	_, err = stmt.Exec(email, password, role, params["email"])
+	checkErr(err)
+	fmt.Fprintf(w, "Credentials with email = %s was Updated", params["email"])
+}
+
+// Delete Credentials
+func DeleteCredentials(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	stmt, err := db.Prepare("DELETE FROM credentials WHERE email = $1")
+	checkErr(err)
+	_, err = stmt.Exec(params["email"])
+	checkErr(err)
+	fmt.Fprintf(w, "Credentials with email = %s Has Been Deleted", params["email"])
+}
+
+//SignIn
+func SignIn(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	var creds Credentials
+	err := json.NewDecoder(r.Body).Decode(&creds)
+	checkErr(err)
+
+	var user Credentials
+	result, err := db.Query("SELECT email, password, role FROM credentials WHERE email=$1", creds.Email)
+
+	for result.Next(){
+		err:= result.Scan(&user.Email, &user.Password, &user.Role)
+		checkErr(err)
+	}
+	if user.Email == ""{
+		err := errors.New("Email or Password is incorrect")
+		json.NewEncoder(w).Encode(err)
+		fmt.Println("Email or password is incorrect")
+		return
+	}
+	check := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password))
+	if check != nil {
+		err := errors.New("Email or Password is incorrect")
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	if creds.Role != user.Role{
+		err:= errors.New("Role is incorrect")
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	validToken, err := GenerateJWT(user.Email, user.Role)
+	checkErr(err)
+	var token Token
+	token.Email = user.Email
+	token.Role = user.Role
+	token.TokenString = validToken
+	json.NewEncoder(w).Encode(token)
+}
+
+//SignUp
+func SignUp(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Content-Type", "application/json")
+	var user Credentials
+	err := json.NewDecoder(r.Body).Decode(&user)
+	checkErr(err)
+	
+	var dbuser Employee
+	result, err := db.Query("SELECT email FROM employees WHERE email=$1", user.Email)
+	checkErr(err)
+	for result.Next(){
+		err := result.Scan(&dbuser.Email)
+		checkErr(err)
+	}
+	if dbuser.Email != "" {
+		err := errors.New("Email already in use")
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	user.Password = getHash([]byte(user.Password))
+
+	stmt, err := db.Prepare("INSERT INTO credentials(email, password, role) VALUES ($1, $2, $3)")
+	_, err = stmt.Exec(user.Email, user.Password, user.Role)
+	checkErr(err)
+	json.NewEncoder(w).Encode(user)
+}
+
+// MiddleWare Function
+func IsAuthorized(handler http.HandlerFunc) http.HandlerFunc{
+	return func(w http.ResponseWriter, r *http.Request){
+
+		if r.Header["Token"] == nil {
+			err := errors.New("No Token Found")
+			json.NewEncoder(w).Encode(err)
+			return
+		}
+
+		var SECRET_KEY = []byte("gosecretkey")
+
+		token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error){
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("There was an errror in parsing")
+			}	
+			return SECRET_KEY, nil
+		})
+
+		if err != nil {
+			err := errors.New("Your Token Has Expired")
+			json.NewEncoder(w).Encode(err)
+			return
+		}
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid{
+			if claims["role"] == "admin" {
+				r.Header.Set("Role", "admin")
+				handler.ServeHTTP(w, r)
+				return
+			}else if claims["role"] == "user" {
+				r.Header.Set("Role", "user")
+				handler.ServeHTTP(w, r)
+				return
+			}
+		}
+		reserr := errors.New("Not Authorized")
+		json.NewEncoder(w).Encode(reserr)
+	}
+}
+
+func AdminIndex(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Role") != "admin" {
+		w.Write([]byte("Not authorized."))
+		return
+	}
+	w.Write([]byte("Welcome, Admin."))
+}
+
+func UserIndex(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Role") != "user" {
+		w.Write([]byte("Not Authorized."))
+		return
+	}
+	w.Write([]byte("Welcome, User."))
 }
 
 // CORSRouterDecorator applies CORS headers to a mux.Router
@@ -407,8 +693,7 @@ func (c *CORSRouterDecorator) ServeHTTP(rw http.ResponseWriter,
         rw.Header().Set("Access-Control-Allow-Methods",
             "POST, GET, OPTIONS, PUT, DELETE")
         rw.Header().Set("Access-Control-Allow-Headers",
-            "Accept, Accept-Language,"+
-                " Content-Type, YourOwnHeader")
+            "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Access-Control-Request-Headers, Access-Control-Request-Method, Connection, Host, Origin, User-Agent, Referer, Cache-Control, X-header")
     }
     // Stop here if its Preflighted OPTIONS request
     if req.Method == "OPTIONS" {

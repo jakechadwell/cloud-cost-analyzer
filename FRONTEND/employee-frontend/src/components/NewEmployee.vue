@@ -1,6 +1,6 @@
 <template>
-    <div>
-      <h3>New Employee</h3>
+    <div class="container">
+      <h3>Welcome, Please Enter Your Employee Details Below:</h3>
       <div class="container">
         <form @submit="validateAndSubmit">
           <div v-if="errors.length">
@@ -79,6 +79,7 @@
         trainingPath: "",
         email: "",
         infographics: "",
+        avatar: "",
         errors: [],
       };
     },
@@ -94,6 +95,7 @@
           this.trainingPath = res.data.trainingPath;
           this.email = res.data.email;
           this.infographics = res.data.infographics;
+          this.avatar = '10';
         });
       },
       validateAndSubmit(e) {
@@ -121,9 +123,10 @@
                 trainingAttended: this.trainingAttended,
                 trainingPath: this.trainingPath,
                 email: this.email,
-                infographics: this.infographics
+                infographics: this.infographics,
+                avatar: '10'
             }).then(() => {
-              this.$router.push("/employees");
+              this.$router.push(`/account/${this.email}`);
             });
         }
         }

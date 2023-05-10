@@ -1,9 +1,9 @@
 <template>
-    <div class="container">
-      <h3>All Employees</h3>
+    <div class="emp-table">
+      <h3 class="mt-5">All Employees</h3>
       <div v-if="message" class="alert alert-success">
         {{ this.message }}</div>
-      <div class="container">
+      <div class="">
         <table class="table">
           <thead>
             <tr> 
@@ -16,6 +16,7 @@
               <th>Training Path</th>
               <th>Email</th>
               <th>Infographics</th>
+              <th>Avatar</th>
               <th>Update</th>
               <th>Delete</th>
             </tr>
@@ -32,6 +33,7 @@
               <td>{{ employee.trainingPath }}</td>
               <td>{{ employee.email }}</td>
               <td>{{ employee.infographics }}</td>
+              <td>{{ employee.avatar }}</td>
               <td>
                 <button class="btn btn-warning" 
                 v-on:click="updateEmployee(employee.employeeid)">
@@ -89,3 +91,11 @@
     },
   };
   </script>
+
+<style scoped>
+  .emp-table{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+</style>

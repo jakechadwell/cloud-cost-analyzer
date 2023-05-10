@@ -13,6 +13,10 @@ class EmployeeDataService {
         return axios.get(`${USER_API_URL}/employees/${employeeid}`);
     }
 
+    retrieveEmployeeByEmail(email) {
+        return axios.get(`${USER_API_URL}/employee/${email}`);
+    }
+
     deleteEmployee(employeeid) {
 
         return axios.delete(`${USER_API_URL}/employees/${employeeid}`);
@@ -27,6 +31,10 @@ class EmployeeDataService {
 
         return axios.post(`${USER_API_URL}/employees`, employee);
     }   
+
+    updateAvatar(employeeid, avatar){
+        return axios.put(`${USER_API_URL}/edit/avatar/${employeeid}`, avatar);
+    }
 }
 
 export default new EmployeeDataService()
